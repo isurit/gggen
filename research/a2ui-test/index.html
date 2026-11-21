@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SmartThings · A2UI 테스트</title><link rel="stylesheet" href="test.css"></head>
+<body>
+<header><a href="/">Gen UI POC</a><a href="https://a2ui.org/">A2UI 문서</a></header>
+<main>
+<div class="intro"><p>SMARTTHINGS · A2UI POC</p><h1>Gen UI POC</h1><div>프롬프트를 저장하고 휴대폰 앱에서 새로고침하세요.</div></div>
+<div class="workspace">
+<form id="settings">
+<label for="prompt">화면 프롬프트</label>
+<textarea id="prompt" rows="7" required maxlength="4000" placeholder="기기를 카드 형태로 보여줘. 이름과 종류를 세로로 배치해줘."></textarea>
+<div class="examples"><button type="button" data-prompt="기기를 리스트 형태로 보여줘. 기기 이름과 종류를 가로로 배치해줘.">리스트 예시</button><button type="button" data-prompt="기기를 카드 형태로 보여줘. 기기 이름과 종류를 세로로 배치해줘.">카드 예시</button></div>
+<label for="pat">SmartThings PAT <span id="pat-state"></span></label>
+<input id="pat" type="password" autocomplete="new-password" placeholder="새 토큰을 입력할 때만 변경됩니다">
+<p class="hint">기기 읽기 권한이 필요합니다. PAT는 발급 후 24시간 유효하며 서버에 보관됩니다.</p>
+<details><summary>화면 생성 모델</summary>
+<label for="model">Gemini 모델</label><input id="model" value="gemini-2.5-flash" required>
+<label for="model-key">Gemini API 키 <span id="key-state"></span></label><input id="model-key" type="password" autocomplete="new-password" placeholder="기존 서버 키가 있으면 그대로 사용합니다">
+<p class="hint">모델에는 프롬프트와 지원 컴포넌트 정보가 전달됩니다. 실제 계정의 기기 데이터는 서버에서 바인딩합니다.</p></details>
+<div class="actions"><button class="primary" id="save">설정 저장</button><button type="button" id="preview">저장한 설정으로 API 호출</button></div>
+<p id="status" role="status" aria-live="polite">설정을 불러오는 중입니다.</p>
+</form>
+<section class="output"><h2>API 응답</h2><p id="meta">설정 저장 후 API를 호출하면 생성한 메시지를 볼 수 있습니다.</p><pre id="response" tabindex="0">아직 호출하지 않았습니다.</pre></section>
+</div>
+<section class="connect"><h2>휴대폰에서 보기</h2>
+<p>앱의 새로고침은 아래 API를 호출합니다. 프롬프트를 변경하면 새 배치를 생성하고, 같은 프롬프트에서는 저장한 배치를 재사용하며 기기 목록을 다시 조회합니다.</p>
+<label for="endpoint">API 주소</label><input id="endpoint" readonly>
+<label for="app-key">앱 연결 키</label><div class="key-row"><input id="app-key" type="password" readonly><button id="copy-key" type="button">복사</button></div>
+<p class="hint">앱에는 위 주소와 앱 연결 키를 설정합니다. 테스트 앱에는 기본 API 주소가 포함됩니다. 앱 연결 키는 USB 설치 시 설정하거나 앱의 연결 설정에 붙여 넣으세요. 휴대폰에서 대시보드 주소에 접속할 수 있어야 합니다.</p>
+<a id="apk" href="/research/a2ui-test/smartthings-a2ui.apk" download>Android APK 다운로드</a>
+<p>첫 범위는 계정의 기기 목록입니다. 이름과 종류를 표시하며, 목록에 없는 실시간 상태와 방 이름은 ‘상태 미조회’, ‘방 정보 미조회’로 표시합니다.</p>
+</section>
+</main><script src="test.js"></script></body></html>
