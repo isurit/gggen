@@ -18,6 +18,7 @@ LAYOUT_SCHEMA_VERSION = 3
 LOCK = threading.RLock()
 GENERATE_LOCK = threading.Lock()
 CONFIG_PATH = Path(__file__).parent / 'data' / 'a2ui-poc' / 'settings.json'
+FIGMA_SAMPLE_PATH = Path(__file__).parent.parent / 'research' / 'a2ui-test' / 'figma-sample.json'
 DEFAULT_PROMPT = '기기를 리스트 형태로 보여줘. 기기 이름과 종류를 세로로 배치해줘.'
 FIELDS = {'name', 'kind', 'type', 'room', 'status'}
 TYPES = {'Text', 'Row', 'Column', 'Card', 'List'}
@@ -49,7 +50,9 @@ def configuration():
 
 def public_configuration():
     config = configuration()
-    return {'ok': True, 'prompt': config['prompt'], 'revision': config['revision'],
+    return {'ok': True, 'sourceMode': config.get('sourceMode', 'prompt'),
+            'figmaSample': json.loads(FIGMA_SAMPLE_PATH.read_text()) if FIGMA_SAMPLE_PATH.exists() else None,
+            'prompt': config['prompt'], 'revision': config['revision'],
             'hasPat': bool(config.get('pat')), 'appKey': config['appKey'],
             'model': config['model'], 'hasModelKey': bool(model_key(config)),
             'endpoint': '/api/a2ui/device-list', 'protocol': 'v0.9.1',
@@ -80,7 +83,12 @@ def update_configuration(body):
                 config[field] = value
         if body.get('clearPat'):
             config['pat'] = ''
-        config.update(prompt=prompt.strip(), model=model, revision=config['revision'] + 1)
+        source_mode = body.get('sourceMode', config.get('sourceMode', 'prompt'))
+        if source_mode not in ('prompt', 'figma'):
+            raise PocError('화면 생성 방식을 확인해 주세요.')
+        if source_mode == 'figma' and not FIGMA_SAMPLE_PATH.exists():
+            raise PocError('가져온 Figma 디자인이 없습니다.')
+        config.update(prompt=prompt.strip(), model=model, sourceMode=source_mode, revision=config['revision'] + 1)
         config.pop('layout', None)
         config.pop('layoutRevision', None)
         save_file(config)
@@ -209,6 +217,10 @@ def generate_layout(config):
 
 
 def layout_for(config):
+    if config.get('sourceMode') == 'figma':
+        sample = json.loads(FIGMA_SAMPLE_PATH.read_text())
+        validate_layout(sample['layout']['item'])
+        return sample['layout'], True
     if config.get('layoutRevision') == config['revision'] and config.get('layoutSchema') == LAYOUT_SCHEMA_VERSION:
         return config['layout'], True
     with GENERATE_LOCK:
@@ -271,9 +283,11 @@ def device_screen():
         layout, cached = layout_task.result()
     sid = 'devices-' + secrets.token_hex(8)
     return {'ok': True, 'messages': messages_for(devices, layout, sid),
-            'meta': {'revision': config['revision'], 'deviceCount': len(devices),
+            'meta': {'sourceMode': config.get('sourceMode', 'prompt'),
+                     'designSource': json.loads(FIGMA_SAMPLE_PATH.read_text())['source'] if config.get('sourceMode') == 'figma' else None,
+                     'revision': config['revision'], 'deviceCount': len(devices),
                      'generatedAt': int(time.time()), 'durationMs': int((time.time() - started) * 1000),
-                     'model': config['model'], 'layoutCached': cached, 'protocol': 'v0.9.1'}}
+                     'model': 'figma-snapshot' if config.get('sourceMode') == 'figma' else config['model'], 'layoutCached': cached, 'protocol': 'v0.9.1'}}
 
 
 def same_origin(handler):

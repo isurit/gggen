@@ -1,0 +1,52 @@
+{
+  "source": {
+    "url": "https://www.figma.com/design/varCN4OTZQfNueiyhd2Ob2?node-id=2-27",
+    "screenId": "2:27",
+    "defaultCardId": "2:21",
+    "mobileCardId": "2:24",
+    "importedAt": "2026-11-21T13:14:48.057Z",
+    "mode": "agent-imported-snapshot"
+  },
+  "figma": {
+    "defaultBackground": "#FFFFFF",
+    "mobileBackground": "#1565C0",
+    "layoutMode": "VERTICAL",
+    "padding": 16,
+    "cornerRadius": 12,
+    "fields": [
+      "device.name",
+      "device.kind"
+    ],
+    "fontFamily": "Roboto",
+    "fontSize": 16,
+    "lineHeight": 24
+  },
+  "layout": {
+    "title": "기기 목록",
+    "direction": "vertical",
+    "item": {
+      "type": "Card",
+      "backgroundColor": "#FFFFFF",
+      "backgroundWhen": {
+        "field": "type",
+        "equals": "MOBILE",
+        "color": "#1565C0"
+      },
+      "children": [
+        {
+          "type": "Column",
+          "children": [
+            {
+              "type": "Text",
+              "field": "name"
+            },
+            {
+              "type": "Text",
+              "field": "kind"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

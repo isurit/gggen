@@ -42,6 +42,14 @@ class DeviceScreenTests(unittest.TestCase):
         self.assertEqual(colored[0]['backgroundColor'], '#1565C0')
         self.assertEqual(messages[0]['createSurface']['catalogId'], poc.CUSTOM_CATALOG)
 
+    def test_figma_mode_uses_imported_layout_without_model_call(self):
+        with patch.object(poc, 'generate_layout') as generate:
+            layout, cached = poc.layout_for({'sourceMode': 'figma'})
+        self.assertTrue(cached)
+        self.assertEqual(layout['item']['backgroundColor'], '#FFFFFF')
+        self.assertEqual(layout['item']['backgroundWhen']['field'], 'type')
+        generate.assert_not_called()
+
     def test_empty_account_has_visible_empty_state(self):
         messages = poc.messages_for([], {'title': '기기', 'direction': 'vertical',
                                         'item': {'type': 'Text', 'field': 'name'}}, 'empty-test')
