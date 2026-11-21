@@ -50,6 +50,20 @@ class DeviceScreenTests(unittest.TestCase):
         self.assertEqual(layout['item']['backgroundWhen']['field'], 'type')
         generate.assert_not_called()
 
+    def test_complex_figma_keeps_literal_text_styles_and_row_layout(self):
+        layout, _ = poc.layout_for({'sourceMode': 'figma', 'figmaSampleId': '2'})
+        messages = poc.messages_for([{'name': 'Phone', 'kind': 'Mobile phone', 'type': 'MOBILE'}], layout, 'complex')
+        nodes = messages[2]['updateComponents']['components']
+        self.assertTrue(any(n.get('justify') == 'stretch' for n in nodes))
+        self.assertTrue(any(n.get('text') == '읽기 전용' for n in nodes))
+        self.assertTrue(any(n.get('variant') == 'h3' and isinstance(n.get('text'), dict) for n in nodes))
+        self.assertGreater(len(nodes), 15)
+        self.assertEqual(messages[0]['createSurface']['catalogId'], poc.CUSTOM_CATALOG)
+
+    def test_figma_selection_rejects_unknown_ids(self):
+        with self.assertRaises(poc.PocError):
+            poc.figma_sample('../settings')
+
     def test_empty_account_has_visible_empty_state(self):
         messages = poc.messages_for([], {'title': '기기', 'direction': 'vertical',
                                         'item': {'type': 'Text', 'field': 'name'}}, 'empty-test')

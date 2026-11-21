@@ -9,6 +9,8 @@
 <form id="settings">
 <label for="source-mode">화면 구성의 원본</label>
 <select id="source-mode"><option value="prompt">자연어 프롬프트</option><option value="figma">Figma에서 가져온 카드 디자인</option></select>
+<label for="figma-sample-id">Figma 데모 선택</label>
+<select id="figma-sample-id"><option value="1">1번 · 단순 카드</option><option value="2">2번 · 상세 카드</option></select>
 <p class="hint" id="source-hint">프롬프트 또는 가져온 Figma 디자인을 선택해 저장하세요.</p>
 <label for="prompt">화면 프롬프트</label>
 <textarea id="prompt" rows="7" required maxlength="4000" placeholder="기기를 카드 형태로 보여줘. 이름과 종류를 세로로 배치해줘."></textarea>
@@ -28,7 +30,7 @@
 <section class="connect figma-demo" id="figma-demo">
 <h2>Figma에서 휴대폰까지</h2>
 <div class="figma-grid">
-<div><a id="figma-link" target="_blank" rel="noreferrer">Figma 원본 열기</a><img src="figma-sample.png" alt="Figma의 기본 카드와 MOBILE 파란 카드 샘플" width="390" height="333"></div>
+<div><a id="figma-link" target="_blank" rel="noreferrer">Figma 원본 열기</a><img id="figma-preview" src="figma-sample.png" alt="Figma의 기본 카드와 MOBILE 파란 카드 샘플" width="390" height="333"></div>
 <div><ol><li>Figma의 카드 배경색과 세로 배치, 텍스트 레이어를 읽었습니다.</li><li>에이전트가 지원 카탈로그와 데이터 필드에 매핑했습니다.</li><li>API는 실제 SmartThings 목록을 조회하고 기기마다 값을 바인딩합니다.</li><li>휴대폰의 새로고침으로 A2uiSurface에 표시합니다.</li></ol>
 <p class="hint">이번 시연은 에이전트가 가져온 디자인 스냅샷을 사용합니다. Figma 변경은 다시 가져온 뒤 반영됩니다. 프롬프트 편집은 ‘자연어 프롬프트’ 모드에서 적용됩니다.</p>
 <details><summary>Figma에서 읽은 속성과 변환한 레이아웃</summary><pre id="figma-data"></pre></details></div>

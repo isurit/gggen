@@ -48,10 +48,20 @@ def configuration():
         return json.loads(CONFIG_PATH.read_text())
 
 
+def figma_sample(sample_id='1'):
+    if sample_id not in ('1', '2'):
+        raise PocError('Figma 디자인 번호를 확인해 주세요.')
+    path = FIGMA_SAMPLE_PATH if sample_id == '1' else FIGMA_SAMPLE_PATH.with_name('figma-sample-2.json')
+    return json.loads(path.read_text())
+
+
 def public_configuration():
     config = configuration()
     return {'ok': True, 'sourceMode': config.get('sourceMode', 'prompt'),
-            'figmaSample': json.loads(FIGMA_SAMPLE_PATH.read_text()) if FIGMA_SAMPLE_PATH.exists() else None,
+            'figmaSampleId': config.get('figmaSampleId', '1'),
+            'figmaSample': figma_sample(config.get('figmaSampleId', '1')) if FIGMA_SAMPLE_PATH.exists() else None,
+            'figmaSamples': [{'id': item, 'label': label, 'sample': figma_sample(item)}
+                             for item, label in [('1', '1번 · 단순 카드'), ('2', '2번 · 상세 카드')]],
             'prompt': config['prompt'], 'revision': config['revision'],
             'hasPat': bool(config.get('pat')), 'appKey': config['appKey'],
             'model': config['model'], 'hasModelKey': bool(model_key(config)),
@@ -88,7 +98,11 @@ def update_configuration(body):
             raise PocError('화면 생성 방식을 확인해 주세요.')
         if source_mode == 'figma' and not FIGMA_SAMPLE_PATH.exists():
             raise PocError('가져온 Figma 디자인이 없습니다.')
-        config.update(prompt=prompt.strip(), model=model, sourceMode=source_mode, revision=config['revision'] + 1)
+        sample_id = body.get('figmaSampleId', config.get('figmaSampleId', '1'))
+        if sample_id not in ('1', '2'):
+            raise PocError('Figma 디자인 번호를 확인해 주세요.')
+        config.update(prompt=prompt.strip(), model=model, sourceMode=source_mode,
+                      figmaSampleId=sample_id, revision=config['revision'] + 1)
         config.pop('layout', None)
         config.pop('layoutRevision', None)
         save_file(config)
@@ -145,7 +159,7 @@ def validate_layout(node, depth=0, count=None):
     if depth > 8 or count[0] > 40 or not isinstance(node, dict):
         raise PocError('생성된 화면 구조가 허용 범위를 벗어났습니다.', 502)
     kind = node.get('type')
-    if kind not in TYPES or set(node) - {'type', 'field', 'children', 'backgroundColor', 'backgroundWhen'}:
+    if kind not in TYPES or set(node) - {'type', 'field', 'value', 'variant', 'justify', 'children', 'backgroundColor', 'backgroundWhen'}:
         raise PocError('생성된 화면에 지원하지 않는 컴포넌트가 있습니다.', 502)
     if 'backgroundWhen' in node and not isinstance(node['backgroundWhen'], dict):
         raise PocError('카드 배경색 조건을 확인해 주세요.', 502)
@@ -161,10 +175,22 @@ def validate_layout(node, depth=0, count=None):
                     or condition['field'] not in FIELDS or not isinstance(condition['equals'], str)
                     or len(condition['equals']) > 250 or not isinstance(condition['color'], str)):
                 raise PocError('카드 배경색 조건을 확인해 주세요.', 502)
+    if 'variant' in node and (kind != 'Text' or node['variant'] not in ('h1', 'h2', 'h3', 'h4', 'h5', 'caption', 'body')):
+        raise PocError('텍스트 스타일을 확인해 주세요.', 502)
+    if 'justify' in node and (kind != 'Row' or node['justify'] not in ('start', 'center', 'end', 'spaceBetween', 'spaceAround', 'spaceEvenly', 'stretch')):
+        raise PocError('가로 배치를 확인해 주세요.', 502)
     if kind == 'Text':
-        if node.get('field') not in FIELDS or 'children' in node:
-            raise PocError('생성된 텍스트의 데이터 연결이 올바르지 않습니다.', 502)
-        return {node['field']}
+        if 'children' in node or ('field' in node) == ('value' in node):
+            raise PocError('텍스트에는 데이터 필드 또는 고정 문구 하나가 필요합니다.', 502)
+        if 'field' in node:
+            if node['field'] not in FIELDS:
+                raise PocError('생성된 텍스트의 데이터 연결이 올바르지 않습니다.', 502)
+            return {node['field']}
+        if not isinstance(node['value'], str) or not 1 <= len(node['value']) <= 200:
+            raise PocError('고정 문구는 1~200자여야 합니다.', 502)
+        return set()
+    if 'value' in node:
+        raise PocError('고정 문구는 Text에서 지원합니다.', 502)
     children = node.get('children')
     if not isinstance(children, list) or not 1 <= len(children) <= 8 or 'field' in node:
         raise PocError('생성된 화면의 자식 구조가 올바르지 않습니다.', 502)
@@ -218,7 +244,7 @@ def generate_layout(config):
 
 def layout_for(config):
     if config.get('sourceMode') == 'figma':
-        sample = json.loads(FIGMA_SAMPLE_PATH.read_text())
+        sample = figma_sample(config.get('figmaSampleId', '1'))
         validate_layout(sample['layout']['item'])
         return sample['layout'], True
     if config.get('layoutRevision') == config['revision'] and config.get('layoutSchema') == LAYOUT_SCHEMA_VERSION:
@@ -251,8 +277,12 @@ def messages_for(devices, layout, surface_id):
                 component['component'] = 'ColoredCard'
                 component['backgroundColor'] = color
         if node['type'] == 'Text':
-            component['text'] = {'path': '/devices/' + str(index) + '/' + node['field']}
+            component['text'] = {'path': '/devices/' + str(index) + '/' + node['field']} if 'field' in node else node['value']
+            if 'variant' in node:
+                component['variant'] = node['variant']
         else:
+            if 'justify' in node:
+                component['justify'] = node['justify']
             children = [expand(child, index) for child in node['children']]
             component['child' if node['type'] == 'Card' else 'children'] = children[0] if node['type'] == 'Card' else children
         return component_id
@@ -284,7 +314,8 @@ def device_screen():
     sid = 'devices-' + secrets.token_hex(8)
     return {'ok': True, 'messages': messages_for(devices, layout, sid),
             'meta': {'sourceMode': config.get('sourceMode', 'prompt'),
-                     'designSource': json.loads(FIGMA_SAMPLE_PATH.read_text())['source'] if config.get('sourceMode') == 'figma' else None,
+                     'figmaSampleId': config.get('figmaSampleId', '1') if config.get('sourceMode') == 'figma' else None,
+                     'designSource': figma_sample(config.get('figmaSampleId', '1'))['source'] if config.get('sourceMode') == 'figma' else None,
                      'revision': config['revision'], 'deviceCount': len(devices),
                      'generatedAt': int(time.time()), 'durationMs': int((time.time() - started) * 1000),
                      'model': 'figma-snapshot' if config.get('sourceMode') == 'figma' else config['model'], 'layoutCached': cached, 'protocol': 'v0.9.1'}}

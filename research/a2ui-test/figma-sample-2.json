@@ -1,0 +1,149 @@
+{
+  "source": {
+    "url": "https://www.figma.com/design/varCN4OTZQfNueiyhd2Ob2?node-id=5-68",
+    "screenId": "5:68",
+    "defaultCardId": "5:34",
+    "mobileCardId": "5:51",
+    "importedAt": "2026-11-21T23:16:36.273Z",
+    "mode": "agent-imported-snapshot"
+  },
+  "figma": {
+    "layoutMode": "VERTICAL",
+    "padding": 16,
+    "cornerRadius": 12,
+    "defaultBackground": "#E9EEF5",
+    "mobileBackground": "#E3EDFF",
+    "fields": [
+      "device.name",
+      "device.kind",
+      "device.type"
+    ],
+    "nodeCount": 52,
+    "instanceCount": 3,
+    "fontFamilies": [
+      "Roboto"
+    ],
+    "imageCount": 0
+  },
+  "layout": {
+    "title": "기기 목록 · 상세",
+    "direction": "vertical",
+    "item": {
+      "type": "Card",
+      "backgroundColor": "#E9EEF5",
+      "children": [
+        {
+          "type": "Column",
+          "children": [
+            {
+              "type": "Row",
+              "justify": "stretch",
+              "children": [
+                {
+                  "type": "Card",
+                  "backgroundColor": "#142D52",
+                  "children": [
+                    {
+                      "type": "Column",
+                      "children": [
+                        {
+                          "type": "Text",
+                          "value": "SmartThings",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "Card",
+                  "backgroundColor": "#D9F3E5",
+                  "children": [
+                    {
+                      "type": "Column",
+                      "children": [
+                        {
+                          "type": "Text",
+                          "value": "읽기 전용",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "Text",
+              "field": "name",
+              "variant": "h3"
+            },
+            {
+              "type": "Row",
+              "justify": "stretch",
+              "children": [
+                {
+                  "type": "Card",
+                  "backgroundColor": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "Column",
+                      "children": [
+                        {
+                          "type": "Column",
+                          "children": [
+                            {
+                              "type": "Text",
+                              "value": "기기 종류",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "Text",
+                              "field": "kind",
+                              "variant": "body"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "Card",
+                  "backgroundColor": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "Column",
+                      "children": [
+                        {
+                          "type": "Column",
+                          "children": [
+                            {
+                              "type": "Text",
+                              "value": "플랫폼 타입",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "Text",
+                              "field": "type",
+                              "variant": "body"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "backgroundWhen": {
+        "field": "type",
+        "equals": "MOBILE",
+        "color": "#E3EDFF"
+      }
+    }
+  }
+}

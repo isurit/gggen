@@ -1,6 +1,15 @@
 (() => {
   const $ = id => document.getElementById(id);
   let revision;
+  let figmaSamples = [];
+  function showFigmaSample() {
+    const selected = figmaSamples.find(item => item.id === $('figma-sample-id').value);
+    if (!selected) return;
+    $('figma-link').href = selected.sample.source.url;
+    $('figma-data').textContent = JSON.stringify(selected.sample, null, 2);
+    $('figma-preview').src = selected.id === '2' ? 'figma-sample-2.png' : 'figma-sample.png';
+    $('figma-preview').alt = selected.label + ' Figma 원본 미리보기';
+  }
   function status(message, error = false) {
     $('status').textContent = message;
     $('status').dataset.error = String(error);
@@ -18,10 +27,9 @@
     $('source-hint').textContent = data.sourceMode === 'figma'
       ? 'Figma에서 가져온 디자인을 사용합니다. 아래에서 원본과 변환 결과를 볼 수 있습니다.'
       : '입력한 프롬프트로 화면 구조를 생성합니다.';
-    if (data.figmaSample) {
-      $('figma-link').href = data.figmaSample.source.url;
-      $('figma-data').textContent = JSON.stringify(data.figmaSample, null, 2);
-    }
+    figmaSamples = data.figmaSamples || [];
+    $('figma-sample-id').value = data.figmaSampleId || '1';
+    showFigmaSample();
     $('prompt').value = data.prompt;
     $('model').value = data.model;
     $('pat-state').textContent = data.hasPat ? '저장됨' : '입력 필요';
@@ -29,6 +37,12 @@
     $('app-key').value = data.appKey;
     $('endpoint').value = location.origin + data.endpoint;
   }
+  $('figma-sample-id').addEventListener('change', () => {
+    $('source-mode').value = 'figma';
+    $('prompt').disabled = true;
+    showFigmaSample();
+    status('선택한 Figma 데모를 적용하려면 설정 저장을 누르세요.');
+  });
   $('source-mode').addEventListener('change', () => {
     $('prompt').disabled = $('source-mode').value === 'figma';
     status('선택한 원본을 적용하려면 설정 저장을 누르세요.');
@@ -47,7 +61,7 @@
     try {
       const data = await api('settings', {method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({revision, sourceMode: $('source-mode').value, prompt: $('prompt').value, model: $('model').value,
+        body: JSON.stringify({revision, sourceMode: $('source-mode').value, figmaSampleId: $('figma-sample-id').value, prompt: $('prompt').value, model: $('model').value,
           pat: $('pat').value.trim(), modelKey: $('model-key').value.trim()})});
       populate(data);
       $('pat').value = '';
@@ -62,7 +76,7 @@
     try {
       const data = await api('device-list');
       $('response').textContent = JSON.stringify(data.messages, null, 2);
-      $('meta').textContent = (data.meta.sourceMode === 'figma' ? 'Figma 디자인 · ' : '') + '기기 ' + data.meta.deviceCount + '개 · 설정 버전 ' +
+      $('meta').textContent = (data.meta.sourceMode === 'figma' ? 'Figma ' + (data.meta.figmaSampleId || '1') + '번 · ' : '') + '기기 ' + data.meta.deviceCount + '개 · 설정 버전 ' +
         data.meta.revision + ' · ' + (data.meta.layoutCached ? '배치 재사용' : '새 배치 생성') +
         ' · ' + data.meta.durationMs + 'ms';
       status('API 호출을 완료했습니다.');
