@@ -9,6 +9,7 @@ import androidx.a2ui.compose.ui.A2uiCatalog
 import androidx.a2ui.compose.ui.A2uiMessageProcessor
 import androidx.a2ui.compose.ui.catalog.A2uiBasicCatalogV1
 import androidx.a2ui.model.catalog.functions.A2uiLocaleProvider
+import androidx.a2ui.model.processor.A2uiSurfaceModel
 import androidx.a2ui.model.processor.processInput
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -26,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,17 +67,8 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
         themeSchema = catalog.themeSchema,
     )
     private val parser = A2uiMessageParser()
-    private val processor = A2uiMessageProcessor(catalogs = listOf(catalog, deviceCatalog))
-    val surfaces = processor.activeSurfaces
-
-    init {
-        viewModelScope.launch(Dispatchers.Default) { processor.collectMessages() }
-        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            processor.outboundEvents.collect { _ ->
-                // The first POC is read-only. Renderer errors remain visible in the surface.
-            }
-        }
-    }
+    val surfaces = MutableStateFlow<List<A2uiSurfaceModel>>(emptyList())
+    private var renderJob: Job? = null
 
     fun refresh() {
         if (busy.value) return
@@ -86,14 +79,19 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
                 val response = withContext(Dispatchers.IO) { fetchScreen() }
                 val messages = response.getJSONArray("messages")
                 require(messages.length() == 3) { "서버의 화면 메시지를 확인해 주세요." }
-                val oldSurfaceIds = surfaces.value.map { it.id }
+                // Retired models stay intact until Compose releases them. Clearing their
+                // properties through deleteSurface can race with an outgoing animation.
+                val processor = A2uiMessageProcessor(catalogs = listOf(catalog, deviceCatalog))
+                renderJob?.cancel()
+                renderJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                    launch(Dispatchers.Default) { processor.collectMessages() }
+                    launch(start = CoroutineStart.UNDISPATCHED) {
+                        processor.outboundEvents.collect { _ -> }
+                    }
+                    processor.activeSurfaces.collect { surfaces.value = it }
+                }
                 for (i in 0 until messages.length()) {
                     processor.processInput(parser, messages.getJSONObject(i).toString())
-                }
-                oldSurfaceIds.forEach { id ->
-                    val deletion = JSONObject().put("version", "v0.9.1")
-                        .put("deleteSurface", JSONObject().put("surfaceId", id))
-                    processor.processInput(parser, deletion.toString())
                 }
                 preferences.edit().putString("url", apiUrl.value).putString("key", appKey.value).apply()
                 val meta = response.getJSONObject("meta")
