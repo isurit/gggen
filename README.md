@@ -1,5 +1,7 @@
 # Gen UI POC
 
+[A2UI 개념 정리](docs/a2ui-overview.html) · HTML 파일을 다운로드해 브라우저에서 열면 오프라인에서도 다이어그램과 카드 예제를 볼 수 있습니다.
+
 SmartThings의 실제 기기 목록을 조회하고, 자연어 프롬프트가 생성한 A2UI 메시지를
 Android Compose 화면에 표시하는 POC입니다.
 
