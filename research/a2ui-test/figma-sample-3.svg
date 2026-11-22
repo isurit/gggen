@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 300" font-family="system-ui,sans-serif" role="img" aria-label="에어 케어 디자인 예시 두 페이지">
+  <rect width="780" height="300" rx="18" fill="#dcece7"/>
+  <g fill="#fff"><rect x="18" y="28" width="364" height="244" rx="24"/><rect x="398" y="28" width="364" height="244" rx="24"/></g>
+  <g fill="#173632" font-size="24" font-weight="700"><text x="36" y="77">에어 케어</text><text x="416" y="77">에어 케어</text></g>
+  <g fill="#48635f" font-size="13"><text x="36" y="101">공기질을 확인하려면 공기청정기를 켜세요.</text><text x="416" y="101">공기질을 확인하려면 공기청정기를 켜세요.</text></g>
+  <g fill="#006653" font-size="13" font-weight="700"><text x="333" y="74">1 / 2</text><text x="713" y="74">2 / 2</text></g>
+  <g fill="#edf4f1"><rect x="36" y="133" width="104" height="90" rx="13"/><rect x="148" y="133" width="104" height="90" rx="13"/><rect x="260" y="133" width="104" height="90" rx="13"/><rect x="416" y="133" width="160" height="90" rx="13"/><rect x="584" y="133" width="160" height="90" rx="13"/></g>
+  <g text-anchor="middle" fill="#173632"><g font-size="21"><text x="88" y="161">≋</text><text x="200" y="161">⌂</text><text x="312" y="161">⌂</text><text x="496" y="161">⌂</text><text x="664" y="161">⌂</text></g><g font-size="15" font-weight="700"><text x="88" y="183">야외</text><text x="200" y="183">거실</text><text x="312" y="183">우리방</text><text x="496" y="183">준우방</text><text x="664" y="183">침실</text></g></g>
+  <g text-anchor="middle" fill="#48635f" font-size="12"><text x="88" y="204">보통</text><text x="200" y="204">데이터 없음</text><text x="312" y="204">데이터 없음</text><text x="496" y="204">데이터 없음</text><text x="664" y="204">데이터 없음</text></g>
+  <g fill="#006653"><circle cx="189" cy="247" r="4"/><circle cx="591" cy="247" r="4"/></g><g fill="#93a9a3"><circle cx="211" cy="247" r="4"/><circle cx="569" cy="247" r="4"/></g>
+</svg>

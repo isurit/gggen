@@ -3,7 +3,6 @@ import os
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
 
 from a2ui_poc import handle
 
@@ -27,8 +26,14 @@ class Handler(SimpleHTTPRequestHandler):
 
     def send_head(self):
         target = Path(self.translate_path(self.path)).resolve()
-        public = (ROOT / 'research' / 'a2ui-test').resolve()
-        if not target.is_relative_to(public) or any(part.startswith('.') for part in target.relative_to(public).parts):
+        public_roots = (ROOT / 'research' / 'a2ui-test', ROOT / 'research' / 'a2ui-overview')
+        mermaid = ROOT / 'assets' / 'vendor' / 'mermaid' / 'mermaid.tiny.js'
+        is_public = any(
+            target.is_relative_to(folder)
+            and not any(part.startswith('.') for part in target.relative_to(folder).parts)
+            for folder in public_roots
+        )
+        if not is_public and target != mermaid:
             self.send_error(404)
             return None
         return super().send_head()

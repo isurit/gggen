@@ -9,9 +9,9 @@ android {
         applicationId = "dev.dashboard.smartthings"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3"
-        val apiUrl = providers.gradleProperty("pocApiUrl").orElse("https://localhost/api/a2ui/device-list").get()
+        versionCode = 8
+        versionName = "0.8"
+        val apiUrl = providers.gradleProperty("pocApiUrl").orElse("").get()
         buildConfigField("String", "API_URL", "\"" + apiUrl + "\"")
         buildConfigField("String", "APP_KEY", "\"\"")
     }

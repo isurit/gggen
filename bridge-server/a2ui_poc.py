@@ -14,6 +14,12 @@ from pathlib import Path
 
 CATALOG = 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'
 CUSTOM_CATALOG = 'urn:gggen:device-catalog:v1'
+FIGMA_DESIGNS = {
+    '1': '1번 · 단순 카드',
+    '2': '2번 · 상세 카드',
+    '3': '3번 · 에어 케어',
+    '4': '4번 · 기능 제안',
+}
 LAYOUT_SCHEMA_VERSION = 3
 LOCK = threading.RLock()
 GENERATE_LOCK = threading.Lock()
@@ -49,9 +55,9 @@ def configuration():
 
 
 def figma_sample(sample_id='1'):
-    if sample_id not in ('1', '2'):
+    if sample_id not in FIGMA_DESIGNS:
         raise PocError('Figma 디자인 번호를 확인해 주세요.')
-    path = FIGMA_SAMPLE_PATH if sample_id == '1' else FIGMA_SAMPLE_PATH.with_name('figma-sample-2.json')
+    path = FIGMA_SAMPLE_PATH if sample_id == '1' else FIGMA_SAMPLE_PATH.with_name(f'figma-sample-{sample_id}.json')
     return json.loads(path.read_text())
 
 
@@ -61,7 +67,7 @@ def public_configuration():
             'figmaSampleId': config.get('figmaSampleId', '1'),
             'figmaSample': figma_sample(config.get('figmaSampleId', '1')) if FIGMA_SAMPLE_PATH.exists() else None,
             'figmaSamples': [{'id': item, 'label': label, 'sample': figma_sample(item)}
-                             for item, label in [('1', '1번 · 단순 카드'), ('2', '2번 · 상세 카드')]],
+                             for item, label in FIGMA_DESIGNS.items()],
             'prompt': config['prompt'], 'revision': config['revision'],
             'hasPat': bool(config.get('pat')), 'appKey': config['appKey'],
             'model': config['model'], 'hasModelKey': bool(model_key(config)),
@@ -72,6 +78,29 @@ def public_configuration():
 def model_key(config):
     return (config.get('modelKey') or os.environ.get('GEMINI_API_KEY')
             or os.environ.get('GOOGLE_API_KEY') or '').strip()
+
+
+def public_design_state(config=None):
+    config = configuration() if config is None else config
+    return {'ok': True, 'revision': config['revision'],
+            'sourceMode': config.get('sourceMode', 'prompt'),
+            'figmaSampleId': config.get('figmaSampleId', '1')}
+
+
+def select_figma_design(body):
+    with LOCK:
+        config = configuration()
+        if body.get('revision') != config['revision']:
+            raise PocError('다른 화면에서 API 설정이 변경됐습니다. 현재 설정을 확인하고 다시 적용해 주세요.', 409)
+        selection = body.get('figmaSampleId')
+        if selection not in FIGMA_DESIGNS:
+            raise PocError('목록에서 지원하는 Figma 디자인을 선택해 주세요.')
+        if config.get('sourceMode') == 'figma' and config.get('figmaSampleId', '1') == selection:
+            return public_design_state(config)
+        result = update_configuration({'revision': config['revision'], 'prompt': config['prompt'],
+                                       'model': config['model'], 'sourceMode': 'figma',
+                                       'figmaSampleId': selection})
+        return public_design_state(result)
 
 
 def update_configuration(body):
@@ -99,7 +128,7 @@ def update_configuration(body):
         if source_mode == 'figma' and not FIGMA_SAMPLE_PATH.exists():
             raise PocError('가져온 Figma 디자인이 없습니다.')
         sample_id = body.get('figmaSampleId', config.get('figmaSampleId', '1'))
-        if sample_id not in ('1', '2'):
+        if sample_id not in FIGMA_DESIGNS:
             raise PocError('Figma 디자인 번호를 확인해 주세요.')
         config.update(prompt=prompt.strip(), model=model, sourceMode=source_mode,
                       figmaSampleId=sample_id, revision=config['revision'] + 1)
@@ -301,8 +330,89 @@ def messages_for(devices, layout, surface_id):
             {'version': 'v0.9.1', 'updateComponents': {'surfaceId': surface_id, 'components': components}}]
 
 
-def device_screen():
+def air_care_screen(config, sample):
+    """Render the two-page Figma sample with illustrative air quality data."""
+    sid = 'air-care-' + secrets.token_hex(8)
+    layout = sample['layout']
+    components = [{
+        'id': 'root', 'component': 'AirCarePager',
+        'title': {'path': '/title'}, 'subtitle': {'path': '/subtitle'},
+        'firstPage': 'page-1', 'secondPage': 'page-2',
+    }]
+    for index, rooms in enumerate(layout['pages']):
+        page = f'page-{index + 1}'
+        tiles = [f'{page}-room-{room + 1}' for room in range(len(rooms))]
+        components.append({'id': page, 'component': 'Row', 'justify': 'stretch',
+                           'children': tiles})
+        for room, tile in enumerate(tiles):
+            path = f'/pages/{index}/{room}'
+            components.extend([
+                {'id': tile, 'component': 'Column', 'align': 'center', 'weight': 1,
+                 'children': [tile + '-icon', tile + '-name', tile + '-status']},
+                {'id': tile + '-icon', 'component': 'Text', 'text': {'path': path + '/symbol'},
+                 'variant': 'h3'},
+                {'id': tile + '-name', 'component': 'Text', 'text': {'path': path + '/name'}},
+                {'id': tile + '-status', 'component': 'Text', 'text': {'path': path + '/status'},
+                 'variant': 'caption'},
+            ])
+    version = 'v0.9.1'
+    return {
+        'ok': True,
+        'messages': [
+            {'version': version, 'createSurface': {'surfaceId': sid, 'catalogId': CUSTOM_CATALOG}},
+            {'version': version, 'updateDataModel': {'surfaceId': sid, 'path': '/', 'value': layout}},
+            {'version': version, 'updateComponents': {'surfaceId': sid, 'components': components}},
+        ],
+        'meta': {'sourceMode': 'figma', 'figmaSampleId': '3', 'designSource': sample['source'],
+                 'revision': config['revision'], 'deviceCount': 0, 'generatedAt': int(time.time()),
+                 'durationMs': 0, 'model': 'figma-snapshot', 'layoutCached': True,
+                 'protocol': version, 'dataSource': 'sample'},
+    }
+
+
+def feature_suggestion_screen(config, sample, supports_feature_card=False):
+    """Use the custom card for clients that advertise it."""
+    sid = 'feature-suggestion-' + secrets.token_hex(8)
+    if supports_feature_card:
+        catalog_id = CUSTOM_CATALOG
+        components = [{
+            'id': 'root', 'component': 'FeatureSuggestionCard',
+            'title': {'path': '/title'},
+            'imageUrl': {'path': '/imageUrl'},
+            'description': {'path': '/description'},
+        }]
+    else:
+        catalog_id = CATALOG
+        components = [
+            {'id': 'root', 'component': 'Card', 'child': 'body'},
+            {'id': 'body', 'component': 'Column', 'children': ['title', 'content']},
+            {'id': 'title', 'component': 'Text', 'variant': 'h3', 'text': {'path': '/title'}},
+            {'id': 'content', 'component': 'Row', 'align': 'center', 'children': ['image', 'description']},
+            {'id': 'image', 'component': 'Image', 'url': {'path': '/imageUrl'},
+             'description': '기능 제안 이미지', 'fit': 'cover', 'variant': 'smallFeature'},
+            {'id': 'description', 'component': 'Text', 'text': {'path': '/description'}, 'weight': 1},
+        ]
+    version = 'v0.9.1'
+    return {
+        'ok': True,
+        'messages': [
+            {'version': version, 'createSurface': {'surfaceId': sid, 'catalogId': catalog_id}},
+            {'version': version, 'updateDataModel': {'surfaceId': sid, 'path': '/', 'value': sample['layout']}},
+            {'version': version, 'updateComponents': {'surfaceId': sid, 'components': components}},
+        ],
+        'meta': {'sourceMode': 'figma', 'figmaSampleId': '4', 'designSource': sample['source'],
+                 'revision': config['revision'], 'deviceCount': 0, 'generatedAt': int(time.time()),
+                 'durationMs': 0, 'model': 'figma-snapshot', 'layoutCached': True,
+                 'protocol': version, 'dataSource': 'sample'},
+    }
+
+
+def device_screen(supports_feature_card=False):
     config = configuration()
+    if config.get('sourceMode') == 'figma' and config.get('figmaSampleId') == '3':
+        return air_care_screen(config, figma_sample('3'))
+    if config.get('sourceMode') == 'figma' and config.get('figmaSampleId') == '4':
+        return feature_suggestion_screen(config, figma_sample('4'), supports_feature_card)
     if not config.get('pat'):
         raise PocError('대시보드 테스트 페이지에서 SmartThings PAT를 저장해 주세요.', 428)
     started = time.time()
@@ -337,11 +447,11 @@ def handle(handler, method):
         browser = bool(handler.headers.get('Sec-Fetch-Site')) and same_origin(handler)
         bearer = handler.headers.get('Authorization', '').removeprefix('Bearer ') if hasattr(str, 'removeprefix') else handler.headers.get('Authorization', '')[7:]
         paired = hmac.compare_digest(bearer, config['appKey'])
-        if path == '/api/a2ui/settings':
+        if path in ('/api/a2ui/settings', '/api/a2ui/design-selection'):
             if not same_origin(handler) or (method == 'POST' and not handler.headers.get('Origin')):
                 raise PocError('대시보드 페이지에서 설정을 저장해 주세요.', 403)
             if method == 'GET':
-                result = public_configuration()
+                result = public_configuration() if path.endswith('/settings') else public_design_state()
             elif method == 'POST':
                 size = int(handler.headers.get('Content-Length', '0'))
                 if not 0 < size <= 12000:
@@ -349,13 +459,16 @@ def handle(handler, method):
                 body = json.loads(handler.rfile.read(size))
                 if not isinstance(body, dict):
                     raise PocError('설정 형식이 올바르지 않습니다.')
-                result = update_configuration(body)
+                result = update_configuration(body) if path.endswith('/settings') else select_figma_design(body)
             else:
                 raise PocError('지원하지 않는 요청입니다.', 405)
         elif path == '/api/a2ui/device-list' and method == 'GET':
             if not (paired or browser):
                 raise PocError('앱 연결 키를 확인해 주세요.', 401)
-            result = device_screen()
+            supports_feature_card = (
+                handler.headers.get('X-A2UI-Feature-Suggestion') == '1'
+            )
+            result = device_screen(supports_feature_card)
         else:
             raise PocError('API를 찾을 수 없습니다.', 404)
         # Private responses deliberately omit permissive CORS headers.

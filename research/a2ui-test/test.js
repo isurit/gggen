@@ -6,8 +6,9 @@
     const selected = figmaSamples.find(item => item.id === $('figma-sample-id').value);
     if (!selected) return;
     $('figma-link').href = selected.sample.source.url;
+    $('figma-link').textContent = selected.sample.source.mode === 'design-preview' ? '카드 미리보기 열기' : 'Figma 원본 열기';
     $('figma-data').textContent = JSON.stringify(selected.sample, null, 2);
-    $('figma-preview').src = selected.id === '2' ? 'figma-sample-2.png' : 'figma-sample.png';
+    $('figma-preview').src = ({'2': 'figma-sample-2.png', '3': 'figma-sample-3.svg', '4': 'figma-sample-4.svg'})[selected.id] || 'figma-sample.png';
     $('figma-preview').alt = selected.label + ' Figma 원본 미리보기';
   }
   function status(message, error = false) {
@@ -72,11 +73,11 @@
   });
   $('preview').addEventListener('click', async () => {
     $('preview').disabled = true;
-    status('실제 기기 목록을 조회하고 화면을 구성하고 있습니다.');
+    status('API에서 화면을 불러오고 있습니다.');
     try {
-      const data = await api('device-list');
+      const data = await api('device-list', {headers: {'X-A2UI-Feature-Suggestion': '1'}});
       $('response').textContent = JSON.stringify(data.messages, null, 2);
-      $('meta').textContent = (data.meta.sourceMode === 'figma' ? 'Figma ' + (data.meta.figmaSampleId || '1') + '번 · ' : '') + '기기 ' + data.meta.deviceCount + '개 · 설정 버전 ' +
+      $('meta').textContent = (data.meta.sourceMode === 'figma' ? 'Figma ' + (data.meta.figmaSampleId || '1') + '번 · ' : '') + (data.meta.dataSource === 'sample' ? '예시 데이터' : '기기 ' + data.meta.deviceCount + '개') + ' · 설정 버전 ' +
         data.meta.revision + ' · ' + (data.meta.layoutCached ? '배치 재사용' : '새 배치 생성') +
         ' · ' + data.meta.durationMs + 'ms';
       status('API 호출을 완료했습니다.');

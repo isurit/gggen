@@ -1,85 +1,63 @@
-# Gen UI POC
+# Gen UI · A2UI 화면 예제
 
-[A2UI 개념 정리](docs/a2ui-overview.html) · HTML 파일을 다운로드해 브라우저에서 열면 오프라인에서도 다이어그램과 카드 예제를 볼 수 있습니다.
+서버가 화면 구조와 데이터를 A2UI JSON으로 보내면 Android 앱이 Compose로 렌더링하는 예제입니다. 콘솔에서 프롬프트 또는 디자인을 선택하고, 같은 응답을 콘솔에서는 JSON으로, Android에서는 화면으로 확인할 수 있습니다.
 
-SmartThings의 실제 기기 목록을 조회하고, 자연어 프롬프트가 생성한 A2UI 메시지를
-Android Compose 화면에 표시하는 POC입니다.
+[A2UI 개념 정리 다운로드](https://raw.githubusercontent.com/isurit/gggen/main/docs/a2ui-overview.html) · HTML을 저장해 브라우저에서 열면 사내에서 대시보드에 접속하지 않고 읽을 수 있습니다. 카드 미리보기와 다이어그램이 포함되어 있고, 각 다이어그램의 Mermaid 원문은 Confluence에서 재사용할 수 있습니다.
 
-## 동작
+## 서버와 콘솔 실행
 
-1. 테스트 페이지에서 SmartThings PAT와 Gemini API 키, 화면 프롬프트를 저장합니다.
-2. Android 앱이 GET /api/a2ui/device-list를 호출합니다.
-3. 서버가 SmartThings 기기 목록을 조회하고 Gemini로 생성한 레이아웃에 실제 값을 바인딩합니다.
-4. 앱의 공식 AndroidX A2UI 프로세서와 Material Surface가 메시지를 렌더링합니다.
+Python 3.9 이상이 필요합니다. 서버는 표준 라이브러리만 사용합니다.
 
-같은 설정의 레이아웃은 캐시하고 기기 목록은 매 요청 새로 조회합니다.
-모델에는 프롬프트와 지원 컴포넌트 정보만 전달합니다.
+```sh
+python3 bridge-server/a2ui_poc_server.py
+```
 
-## 서버 실행
+브라우저에서 콘솔 `http://127.0.0.1:8080/`을 열고 다음 순서로 확인합니다.
 
-Python 3.9 이상을 사용합니다. 서버는 Python 표준 라이브러리로 동작합니다.
+1. **4번 · 기능 제안** 또는 **3번 · 에어 케어**를 선택하고 **설정 저장**을 누릅니다. 두 예제는 저장된 예시 데이터를 사용하므로 SmartThings나 Gemini 키 없이 실행됩니다.
+2. 콘솔에서 **API 호출**을 눌러 메시지와 데이터를 확인합니다. 상단 **A2UI 개념 정리**에서 편집 가능한 문서를 열 수 있습니다.
+3. **1번 · 단순 카드**와 **2번 · 상세 카드**는 SmartThings 기기 읽기 권한이 있는 PAT를 저장한 뒤 확인합니다.
+4. **자연어 프롬프트** 모드는 PAT와 Gemini API 키를 사용합니다. 모델 키는 콘솔에서 저장하거나 서버 환경 변수 `GEMINI_API_KEY`로 지정합니다. 같은 설정에서 생성한 레이아웃을 재사용하고, 기기 목록은 요청 시 조회합니다.
 
-    python3 bridge-server/a2ui_poc_server.py
+서버의 기본 바인딩은 로컬입니다. Android에서 연결할 때는 조직에서 승인한 접근 제한 HTTPS 프록시로 콘솔과 API를 제공합니다. 콘솔은 설정을 변경하고 앱 연결 키를 표시하므로 접근 가능한 사용자를 제한해야 합니다. 설정은 `bridge-server/data/a2ui-poc/settings.json`에 로컬로 저장됩니다. PAT와 모델 키는 서버에서 사용하고 Android에는 앱 연결 키만 입력합니다.
 
-브라우저에서 http://127.0.0.1:8080/을 엽니다.
-테스트 페이지에서 기기 읽기 권한의 SmartThings PAT와 Gemini API 키를 입력합니다.
-환경 변수 GEMINI_API_KEY 또는 GOOGLE_API_KEY를 사용해도 됩니다.
+## Android 빌드와 연결
 
-호스트와 포트는 HOST, PORT 환경 변수로 변경합니다.
-설정은 웹 경로에서 차단된 서버 data 디렉터리의 권한 0600 파일로 저장합니다.
-휴대폰 연결은 신뢰할 수 있는 사설 네트워크의 HTTPS 프록시로 구성합니다.
-배포 환경의 접근 제어는 운영자가 설정해야 합니다.
+JDK 17과 Android SDK API 37을 설치하고 Android Studio에서 `android/a2ui-smartthings`를 엽니다. 터미널에서는 Gradle Wrapper로 빌드할 수 있습니다.
 
-## Android 빌드와 설치
+```sh
+cd android/a2ui-smartthings
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
 
-JDK 17, Android SDK 37.0, Gradle wrapper를 사용합니다.
-공식 AndroidX A2UI 1.0.0-alpha02, A2UI 메시지 v0.9.1을 사용합니다.
+앱의 **연결 설정**에 HTTPS로 접근 가능한 `/api/a2ui/device-list` 전체 주소와 콘솔의 앱 연결 키를 입력하고 **새로고침**을 누릅니다. 콘솔을 로컬 HTTP로 띄웠다면 Android에는 프록시의 HTTPS 주소를 입력합니다. 빌드 시 `-PpocApiUrl=https://your-host.example/api/a2ui/device-list`로 기본 주소를 설정할 수도 있습니다.
 
-    cd android/a2ui-smartthings
-    ./gradlew assembleDebug -PpocApiUrl=https://YOUR_HOST/api/a2ui/device-list
+현재 예제 앱은 AndroidX A2UI `1.0.0-alpha02`와 A2UI 메시지 `v0.9.1`을 사용합니다.
 
-빌드한 app/build/outputs/apk/debug/app-debug.apk를 설치합니다.
-앱의 연결 설정에 HTTPS API 주소와 테스트 페이지의 앱 연결 키를 입력합니다.
-APK에는 계정 토큰이나 앱 연결 키를 포함하지 않습니다.
+## 요청부터 화면까지
 
-    adb install -r app/build/outputs/apk/debug/app-debug.apk
+1. 콘솔은 `/api/a2ui/settings`에 디자인 선택 또는 프롬프트를 저장합니다.
+2. 앱이 `GET /api/a2ui/device-list`를 호출합니다. 서버는 디자인 스냅샷 또는 생성된 배치에 데이터를 채웁니다.
+3. 응답의 `messages` 배열은 `createSurface`, `updateDataModel`, `updateComponents` 순서입니다. 앱이 각 메시지를 프로세서에 전달하고 `A2uiSurface`가 등록된 카탈로그로 화면을 표시합니다. 기기 목록 예제는 Surface 하나에 여러 카드를 담습니다.
+4. 4번은 앱이 `X-A2UI-Feature-Suggestion: 1`로 지원을 알리면 `FeatureSuggestionCard`를 보냅니다. 나머지 요청에는 같은 내용을 기본 `Card`, `Row`, `Image`, `Text` 등으로 구성해 보냅니다.
 
-## 프롬프트 예시
+## 무엇을 어디에서 수정하나
 
-- 기기를 리스트 형태로 보여줘. 이름과 종류를 세로로 배치해줘.
-- 기기를 카드 형태로 보여줘.
-- 기기를 카드 형태로 보여줘. 기기 type이 MOBILE이면 카드 배경을 파란색으로 칠해줘.
+| 작업 | 위치 |
+| --- | --- |
+| 응답 데이터, 프롬프트 허용 범위, A2UI 메시지 조립 변경 | [서버 로직](bridge-server/a2ui_poc.py) |
+| 디자인 스냅샷의 레이아웃과 예시 데이터 변경 | [콘솔의 디자인 JSON과 이미지](research/a2ui-test). Figma에서 바꾼 내용은 스냅샷에 반영한 뒤 콘솔에서 선택합니다. |
+| 콘솔 화면과 호출 방식 변경 | [콘솔 HTML, CSS, JS](research/a2ui-test) |
+| Surface 연결, 사용자 동작, 앱 카탈로그와 이미지 로더 구현 | [Android 소스](android/a2ui-smartthings/app/src/main/java/dev/dashboard/smartthings) |
+| A2UI 개념, 카드 예제, Mermaid 다이어그램 수정 | [문서 원본](research/a2ui-overview/index.html). 수정 후 문서 상단의 **오프라인 HTML 저장**으로 [배포용 HTML](docs/a2ui-overview.html)을 갱신합니다. |
 
-기기 type 조건은 SmartThings 응답의 원본 type 필드에 연결됩니다.
-kind는 화면에 보여줄 기기 종류입니다.
-색상 조건은 서버가 실제 기기 데이터로 평가합니다.
-색상이 있는 카드는 확장 카탈로그 urn:gggen:device-catalog:v1의 ColoredCard를 사용합니다.
-표준 Card 구현의 색상 속성은 고정되어 있으므로 앱에 이 확장 구현을 등록했습니다.
-조건과 색상 값은 모델이 생성하고 서버가 검증합니다.
-앱은 전달받은 RGB 색상과 자식 컴포넌트를 그립니다.
+앱이 이미 지원하는 컴포넌트와 속성으로 문구, 데이터, 카드 순서, 배치를 바꿀 때는 서버의 응답을 수정하면 됩니다. 새로운 타입이나 제스처, 이미지 표시 기능이 필요하면 Android 구현과 카탈로그를 추가해 배포합니다. 예를 들어 3번의 `AirCarePager`는 두 페이지를 받으며, 4번의 이미지 로더는 지정된 예제 URL과 내장 예시 사진을 사용합니다. 상세 판단 기준은 [오프라인 문서](docs/a2ui-overview.html)의 **앱 재배포가 필요한 경우**를 참고하세요.
 
-## 범위와 검증
+## 테스트
 
-기기 이름과 종류를 표시합니다.
-방 이름과 실시간 상태는 아직 조회하지 않습니다.
-기기 제어 동작은 포함하지 않습니다.
-PAT 만료, 모델 오류, 빈 기기 목록을 처리합니다.
-동시 설정 변경은 revision 충돌로 보호합니다.
+```sh
+python3 -m unittest discover -s bridge-server/tests -p test_a2ui_poc.py
+```
 
-    python3 -m unittest discover -s bridge-server/tests -p test_a2ui_poc.py
-
-테스트는 컴포넌트 참조, 빈 목록, 잘못된 생성 결과, 페이지네이션의 토큰 전달 대상,
-설정 충돌, 비밀값 비노출, 기기 타입별 카드 색상을 검증합니다.
-
-## Figma 데모 선택
-
-대시보드의 Figma 데모 선택에서 디자인을 고른 뒤 설정을 저장합니다.
-같은 기기 목록 API와 Android 앱을 사용합니다.
-
-- 1번 단순 카드는 기존의 세로 텍스트 두 줄과 MOBILE 파란 배경입니다.
-- 2번 상세 카드는 상단 정보 영역, 큰 기기 이름, 종류·플랫폼 타입을 가로로 배치한 중첩 카드입니다.
-
-Figma 원본에서 에이전트가 읽은 스냅샷을 사용합니다.
-파일을 수정한 뒤 에이전트가 다시 읽어 스냅샷을 갱신하면 API 응답에 반영됩니다.
-실제 기기 정보는 실행 시 SmartThings에서 조회해 바인딩합니다.
-1번 스냅샷은 기존 설정과 호환되며, 디자인 번호가 없는 설정도 1번으로 처리합니다.
+콘솔에서 3번과 4번을 각각 적용해 JSON을 확인한 뒤, 연결된 Android 앱에서 새로고침하면 3번의 스와이프와 4번의 이미지 카드를 확인할 수 있습니다.

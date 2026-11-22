@@ -55,14 +55,16 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
     val busy = MutableStateFlow(false)
     val status = MutableStateFlow("대시보드에서 설정을 저장한 뒤 새로고침하세요.")
     private val catalog = materialA2uiBasicCatalogV1(
-        image = MaterialA2uiBasicCatalogV1Defaults.image { _, _, _, _, _ -> },
+        image = MaterialA2uiBasicCatalogV1Defaults.image { url, description, contentScale, _, _ ->
+            FeatureImage(url, description, contentScale)
+        },
         video = MaterialA2uiBasicCatalogV1Defaults.video { _, _, _ -> },
         audioPlayer = MaterialA2uiBasicCatalogV1Defaults.audioPlayer { _, _, _, _ -> },
         functions = A2uiBasicCatalogV1.Functions(application, A2uiLocaleProvider.Default),
     )
     private val deviceCatalog = A2uiCatalog(
         catalogId = "urn:gggen:device-catalog:v1",
-        components = catalog.components + ColoredCard,
+        components = catalog.components + listOf(ColoredCard, AirCarePager, FeatureSuggestionCard),
         functions = catalog.functions,
         themeSchema = catalog.themeSchema,
     )
@@ -74,7 +76,7 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
         if (busy.value) return
         busy.value = true
         viewModelScope.launch {
-            status.value = "기기 목록을 불러오고 있습니다."
+            status.value = "화면을 불러오고 있습니다."
             try {
                 val response = withContext(Dispatchers.IO) { fetchScreen() }
                 val messages = response.getJSONArray("messages")
@@ -95,8 +97,12 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
                 }
                 preferences.edit().putString("url", apiUrl.value).putString("key", appKey.value).apply()
                 val meta = response.getJSONObject("meta")
-                status.value = "기기 ${meta.getInt("deviceCount")}개 · 설정 ${meta.getInt("revision")} · " +
-                    if (meta.getBoolean("layoutCached")) "배치 재사용" else "새 배치 생성"
+                status.value = if (meta.optString("dataSource") == "sample") {
+                    if (meta.optString("figmaSampleId") == "4") "기능 제안" else "에어 케어 · 예시 데이터"
+                } else {
+                    "기기 ${meta.getInt("deviceCount")}개 · 설정 ${meta.getInt("revision")} · " +
+                        if (meta.getBoolean("layoutCached")) "배치 재사용" else "새 배치 생성"
+                }
             } catch (error: Exception) {
                 status.value = error.message ?: "서버에 연결할 수 없습니다."
             } finally {
@@ -117,6 +123,7 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
             connection.readTimeout = 100_000
             connection.setRequestProperty("Authorization", "Bearer " + appKey.value.trim())
             connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("X-A2UI-Feature-Suggestion", "1")
             val code = connection.responseCode
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val body = stream?.bufferedReader()?.use { it.readText() }

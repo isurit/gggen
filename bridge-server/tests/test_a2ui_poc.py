@@ -64,6 +64,48 @@ class DeviceScreenTests(unittest.TestCase):
         with self.assertRaises(poc.PocError):
             poc.figma_sample('../settings')
 
+    def test_air_care_selection_returns_two_pages_without_smartthings(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            poc, 'CONFIG_PATH', Path(directory) / 'settings.json'
+        ), patch.object(poc, 'load_devices') as load_devices:
+            config = poc.configuration()
+            poc.select_figma_design({'revision': config['revision'], 'figmaSampleId': '3'})
+            response = poc.device_screen()
+
+        load_devices.assert_not_called()
+        self.assertEqual(response['meta']['dataSource'], 'sample')
+        create, data, update = response['messages']
+        self.assertEqual(create['createSurface']['catalogId'], poc.CUSTOM_CATALOG)
+        pages = data['updateDataModel']['value']['pages']
+        self.assertEqual([[room['name'] for room in page] for page in pages],
+                         [['야외', '거실', '우리방'], ['준우방', '침실']])
+        nodes = {node['id']: node for node in update['updateComponents']['components']}
+        root = nodes['root']
+        self.assertEqual(root['component'], 'AirCarePager')
+        self.assertEqual([len(nodes[root[key]]['children']) for key in ('firstPage', 'secondPage')],
+                         [3, 2])
+
+    def test_design_selection_preserves_prompt_and_credentials(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(poc, 'CONFIG_PATH', Path(directory) / 'settings.json'):
+            config = poc.configuration()
+            config.update(prompt='Existing UX', pat='private-pat', modelKey='private-model-key')
+            poc.save_file(config)
+            state = poc.select_figma_design({'revision': config['revision'], 'figmaSampleId': '2', 'pat': 'unwanted-overwrite'})
+            stored = poc.configuration()
+            self.assertEqual(stored['prompt'], 'Existing UX')
+            self.assertEqual(stored['pat'], 'private-pat')
+            self.assertEqual(stored['modelKey'], 'private-model-key')
+            self.assertEqual(stored['sourceMode'], 'figma')
+            self.assertEqual(stored['figmaSampleId'], '2')
+            self.assertNotIn('appKey', state)
+            self.assertNotIn('private', json.dumps(state))
+            same = poc.select_figma_design({'revision': state['revision'], 'figmaSampleId': '2'})
+            self.assertEqual(same['revision'], state['revision'])
+            with self.assertRaises(poc.PocError) as error:
+                poc.select_figma_design({'revision': config['revision'], 'figmaSampleId': '1'})
+            self.assertEqual(error.exception.status, 409)
+            self.assertEqual(poc.configuration()['figmaSampleId'], '2')
+
     def test_empty_account_has_visible_empty_state(self):
         messages = poc.messages_for([], {'title': '기기', 'direction': 'vertical',
                                         'item': {'type': 'Text', 'field': 'name'}}, 'empty-test')

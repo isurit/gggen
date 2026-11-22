@@ -1,0 +1,11 @@
+{
+  "source": {
+    "url": "/research/a2ui-test/figma-sample-4.svg",
+    "mode": "design-preview"
+  },
+  "layout": {
+    "title": "기능 제안",
+    "imageUrl": "https://picsum.photos/200/300",
+    "description": "이미지와 함께 표시되는 카드의 예제입니다"
+  }
+}

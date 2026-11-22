@@ -1,0 +1,42 @@
+{
+  "source": {
+    "url": "https://www.figma.com/design/varCN4OTZQfNueiyhd2Ob2?node-id=9-59",
+    "nodeId": "9:59",
+    "mode": "figma-prototype"
+  },
+  "layout": {
+    "title": "에어 케어",
+    "subtitle": "공기질을 확인하려면 공기청정기를 켜세요.",
+    "pages": [
+      [
+        {
+          "name": "야외",
+          "status": "보통",
+          "symbol": "≋"
+        },
+        {
+          "name": "거실",
+          "status": "데이터 없음",
+          "symbol": "⌂"
+        },
+        {
+          "name": "우리방",
+          "status": "데이터 없음",
+          "symbol": "⌂"
+        }
+      ],
+      [
+        {
+          "name": "준우방",
+          "status": "데이터 없음",
+          "symbol": "⌂"
+        },
+        {
+          "name": "침실",
+          "status": "데이터 없음",
+          "symbol": "⌂"
+        }
+      ]
+    ]
+  }
+}

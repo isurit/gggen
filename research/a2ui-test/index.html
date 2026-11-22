@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SmartThings · A2UI 테스트</title><link rel="stylesheet" href="test.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gen UI 콘솔</title><link rel="stylesheet" href="test.css"></head>
 <body>
-<header><a href="/">Gen UI POC</a><a href="https://a2ui.org/">A2UI 문서</a></header>
+<header><a href="/">Gen UI 콘솔</a><a href="/research/a2ui-overview/">A2UI 개념 정리</a></header>
 <main>
-<div class="intro"><p>SMARTTHINGS · A2UI POC</p><h1>Gen UI POC</h1><div>프롬프트를 저장하고 휴대폰 앱에서 새로고침하세요.</div></div>
+<div class="intro"><p>SMARTTHINGS · A2UI</p><h1>Gen UI</h1><div>프롬프트를 저장하고 휴대폰 앱에서 새로고침하세요.</div></div>
 <div class="workspace">
 <form id="settings">
 <label for="source-mode">화면 구성의 원본</label>
 <select id="source-mode"><option value="prompt">자연어 프롬프트</option><option value="figma">Figma에서 가져온 카드 디자인</option></select>
 <label for="figma-sample-id">Figma 데모 선택</label>
-<select id="figma-sample-id"><option value="1">1번 · 단순 카드</option><option value="2">2번 · 상세 카드</option></select>
+<select id="figma-sample-id"><option value="1">1번 · 단순 카드</option><option value="2">2번 · 상세 카드</option><option value="3">3번 · 에어 케어</option><option value="4">4번 · 기능 제안</option></select>
 <p class="hint" id="source-hint">프롬프트 또는 가져온 Figma 디자인을 선택해 저장하세요.</p>
 <label for="prompt">화면 프롬프트</label>
 <textarea id="prompt" rows="7" required maxlength="4000" placeholder="기기를 카드 형태로 보여줘. 이름과 종류를 세로로 배치해줘."></textarea>
@@ -40,7 +40,7 @@
 <label for="endpoint">API 주소</label><input id="endpoint" readonly>
 <label for="app-key">앱 연결 키</label><div class="key-row"><input id="app-key" type="password" readonly><button id="copy-key" type="button">복사</button></div>
 <p class="hint">앱에는 위 주소와 앱 연결 키를 설정합니다. 테스트 앱에는 기본 API 주소가 포함됩니다. 앱 연결 키는 USB 설치 시 설정하거나 앱의 연결 설정에 붙여 넣으세요. 휴대폰에서 대시보드 주소에 접속할 수 있어야 합니다.</p>
-<a id="apk" href="/research/a2ui-test/smartthings-a2ui.apk" download>Android APK 다운로드</a>
+<a href="https://github.com/isurit/gggen#android-빌드와-연결">Android 빌드와 연결 방법</a>
 <p>첫 범위는 계정의 기기 목록입니다. 이름과 종류를 표시하며, 목록에 없는 실시간 상태와 방 이름은 ‘상태 미조회’, ‘방 정보 미조회’로 표시합니다.</p>
 </section>
-</main><script src="test.js"></script></body></html>
+</main><script src="test.js?v=feature-suggestion-2"></script></body></html>

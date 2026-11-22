@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>A2UI 개념 정리</title>
+  <style>
+    :root { color-scheme: light; --ink: #172b38; --muted: #485d6a; --line: #d4dfe5; --soft: #eef4f5; --accent: #146052; }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 20px; }
+    body { margin: 0; background: #f6f9fa; color: var(--ink); font: 16px/1.75 system-ui, sans-serif; }
+    .page { max-width: 1050px; margin: auto; padding: 32px 28px 64px; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    h1, h2, h3 { line-height: 1.35; letter-spacing: -.025em; }
+    h1 { margin: 28px 0 14px; font-size: clamp(30px, 5vw, 48px); }
+    h2 { margin: 0 0 18px; font-size: clamp(23px, 4vw, 29px); }
+    h3 { margin: 28px 0 12px; font-size: 19px; }
+    p { margin: 0 0 14px; }
+    .toolbar, .toc { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+    .toolbar { justify-content: space-between; }
+    button { cursor: pointer; }
+    .export { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font: inherit; font-weight: 650; }
+    .export:disabled { opacity: .7; cursor: wait; }
+    #export-status:empty { display: none; }
+    .intro { color: var(--muted); max-width: 76ch; }
+    .toc { margin: 26px 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    main > section { padding: 28px 0; border-top: 1px solid var(--line); }
+    .table-wrap { overflow-x: auto; margin: 15px 0 23px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th, td { padding: 10px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    thead th { background: var(--soft); }
+    tbody tr:last-child > * { border-bottom: 0; }
+    code { color: #264e64; overflow-wrap: anywhere; }
+    pre { background: #edf3f5; padding: 14px; border-radius: 8px; overflow: auto; font-size: 13px; line-height: 1.6; }
+    pre code { overflow-wrap: normal; }
+    .split { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .split > div { min-width: 0; }
+    .diagram { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 15px 0; }
+    .diagram h3 { margin-top: 0; }
+    figure.diagram { margin-inline: 0; }
+    .diagram-render { overflow: auto; text-align: center; margin: 10px 0; }
+    .diagram-render:empty { display: none; }
+    .diagram-render svg { display: block; margin: auto; width: auto; max-width: 100%; height: auto; }
+    summary { color: var(--accent); cursor: pointer; font-weight: 650; }
+    ol, ul { padding-left: 24px; }
+    li + li { margin-top: 4px; }
+    @media (max-width: 680px) {
+      .page { padding: 22px 16px 42px; }
+      .split { grid-template-columns: 1fr; gap: 0; }
+      table { min-width: 490px; }
+      .diagram-render svg { min-width: 460px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .toolbar, .toc { display: none; }
+      .page { max-width: none; padding: 0; }
+      .diagram { break-inside: avoid; }
+    }
+    #catalog .preview { background:#f6f8fc; border:1px solid #e5eaf2; border-radius:12px; padding:22px 18px; display:flex; flex-direction:column; justify-content:center; min-height:158px; gap:12px; color:#243650; font-size:14px }
+    #catalog .preview-caption { font-size:11px; color:#697b92; line-height:1.5; text-align:center }
+    #catalog .text-demo { display:flex; flex-direction:column; gap:8px }
+    #catalog .title-sample { font-size:23px; letter-spacing:-.04em }
+    #catalog .text-demo small { color:#687993; font-size:12px }
+    #catalog .device-image { display:block; width:100%; max-height:155px; object-fit:contain }
+    #catalog .icon-demo { display:flex; justify-content:space-around; gap:14px }
+    #catalog .icon-demo>span { display:flex; flex-direction:column; align-items:center; gap:10px }
+    #catalog .icon-demo svg, #catalog .card-glyph svg { width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round }
+    #catalog .icon-demo small { font-size:11px; color:#71819a }
+    #catalog .video-demo { border-radius:10px; overflow:hidden; background:#233653; color:white }
+    #catalog .video-scene { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:110px; background:linear-gradient(140deg,#315c86,#172c47) }
+    #catalog .play-symbol { border-radius:50%; background:#ffffff26; font-size:20px; padding:4px 13px }
+    #catalog .media-controls { display:flex; align-items:center; gap:10px; padding:13px 12px }
+    #catalog .media-controls small { white-space:nowrap; font-size:10px }
+    #catalog .media-track { height:4px; background:#b7c3d6; flex:1; border-radius:4px; min-width:20px; overflow:hidden }
+    #catalog .media-track i { display:block; width:30%; height:100%; background:#6993e8 }
+    #catalog .audio-demo { background:white; border:1px solid var(--line); padding:15px; border-radius:12px }
+    #catalog .audio-demo strong { font-size:14px }
+    #catalog .audio-demo .media-controls { padding:10px 0 0 }
+    #catalog .audio-play { color:#345bc6 }
+    #catalog .layout-guide { position:relative; border:1px dashed #95abd7; border-radius:10px; padding:27px 10px 12px; display:flex; gap:8px; background:#edf2fb }
+    #catalog .layout-tag { position:absolute; top:3px; left:10px; color:#5774a9; font-size:11px }
+    #catalog .horizontal { flex-direction:row }
+    #catalog .vertical { flex-direction:column }
+    #catalog .ghost-box { border:1px solid #bfd0eb; background:white; border-radius:6px; text-align:center; padding:9px 7px; font-size:12px; flex:1 }
+    #catalog .list-demo { display:flex; flex-direction:column }
+    #catalog .list-demo>div { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line) }
+    #catalog .list-demo>div:last-child { border:0 }
+    #catalog .list-index { width:28px; height:28px; border-radius:8px; background:#e4eafa; color:#4566a8; display:grid; place-items:center; font-size:11px }
+    #catalog .list-demo small { display:block; font-size:11px; color:#71819a }
+    #catalog .sample-card { background:white; border:1px solid #d7deea; border-radius:16px; padding:23px 20px; box-shadow:0 4px 10px #26345108; display:flex; flex-direction:column; gap:7px }
+    #catalog .sample-card strong { font-size:17px }
+    #catalog .sample-card small { font-size:12px; color:#6d7c92 }
+    #catalog .card-glyph { font-size:25px; color:#536f9a; line-height:1; margin-bottom:7px }
+    #catalog .blue-card { background:#1565c0; border-color:#1565c0; color:white }
+    #catalog .blue-card small, #catalog .blue-card .card-glyph { color:#e0edff }
+    #catalog .tabs-demo { background:white; border:1px solid var(--line); border-radius:9px; overflow:hidden }
+    #catalog .tab-buttons { display:flex; border-bottom:1px solid var(--line) }
+    #catalog .tab-buttons button { flex:1; border:0; background:none; padding:12px 8px; font:inherit; color:#6b7d96; cursor:pointer; border-bottom:2px solid transparent }
+    #catalog .tab-buttons button[aria-selected=true] { color:#345bc6; border-bottom-color:#345bc6 }
+    #catalog .tabs-demo [role=tabpanel] { padding:16px; min-height:85px; line-height:1.9 }
+    #catalog .modal-scene { position:relative; height:180px; border-radius:10px; overflow:hidden; background:white }
+    #catalog .modal-underlay { padding:14px; display:flex; flex-direction:column; gap:20px; color:#596b85; font-size:12px }
+    #catalog .modal-scrim { position:absolute; inset:0; background:#1c2b4b55 }
+    #catalog .modal-illustration { position:absolute; top:28px; left:18px; right:18px; padding:16px 18px; background:white; border-radius:15px; box-shadow:0 5px 20px #1c2b4b25; display:flex; flex-direction:column; gap:8px; font-size:12px }
+    #catalog .modal-illustration strong { font-size:15px }
+    #catalog .fake-action { color:#345bc6; text-align:right; font-weight:650 }
+    #catalog .divider-demo { display:flex; flex-direction:column; gap:16px }
+    #catalog .divider-demo hr { border:0; height:1px; background:#b6c4d8; width:100%; margin:0 }
+    #catalog .button-demo { display:flex; flex-direction:column; align-items:center; gap:13px }
+    #catalog .primary-button { background:#345bc6; color:white; padding:12px 24px; border:0; border-radius:24px; font:inherit; cursor:pointer }
+    #catalog .primary-button:active { background:#244598 }
+    #catalog .button-demo output { font-size:12px; color:#697b92 }
+    #catalog .field-demo { display:flex; flex-direction:column; gap:7px; font-size:12px; color:#667991 }
+    #catalog .field-demo input { min-width:0; width:100%; padding:13px 10px; background:#fff; border:1px solid #9eafc9; border-radius:8px; font:inherit; font-size:14px; color:#243650 }
+    #catalog .choice-demo { display:flex; flex-direction:column; gap:13px; border:0; padding:0; margin:0; min-width:0 }
+    #catalog .choice-demo label { display:flex; align-items:center; gap:9px; cursor:pointer; font-size:13px }
+    #catalog .choice-demo legend { padding:0 0 10px; font-size:12px; color:#667991 }
+    #catalog .choice-demo input { accent-color:#345bc6; width:17px; height:17px; margin:0 }
+    #catalog .slider-demo { display:flex; flex-direction:column; gap:12px }
+    #catalog .slider-demo label { display:flex; justify-content:space-between; font-size:13px }
+    #catalog .slider-demo output { font-weight:700; color:#345bc6 }
+    #catalog .slider-demo input { width:100%; accent-color:#345bc6; margin:0 }
+    #catalog .range-labels { display:flex; justify-content:space-between; color:#7b8ba0; font-size:11px }
+    .basic-components { table-layout: fixed; }
+    .basic-components thead th:nth-child(1) { width: 8%; }
+    .basic-components thead th:nth-child(2) { width: 14%; }
+    .basic-components thead th:nth-child(3) { width: 25%; }
+    .component-properties > .component-caution { background: #faf8f2; border-top: 0; border-radius: 6px; padding: 8px 10px; }
+    .component-caution dt, .component-properties .component-caution dd { color: #514735; }
+    .basic-components .catalog-preview-cell { padding: 12px; }
+    .basic-components tbody tr > * { vertical-align: middle; }
+    #catalog .preview { min-height: 110px; padding: 14px; overflow: hidden; }
+    #catalog .preview [role="tabpanel"] { min-height: 64px; }
+    #catalog .preview [hidden] { display: none !important; }
+    #catalog .catalog-preview-cell button { cursor: default; }
+    .component-properties { margin: 0; }
+    .component-properties > div + div { border-top: 1px solid var(--line); margin-top: 9px; padding-top: 9px; }
+    .component-properties dt { font-weight: 650; }
+    .component-properties dd { margin: 0; color: var(--muted); }
+    .property-values { display: block; font-size: 13px; color: var(--ink); }
+    .required-property { margin-left: 5px; font-size: 12px; font-weight: 600; color: var(--accent); }
+    @media (max-width: 680px) { .basic-components { min-width: 690px; } }
+    .figma-examples { table-layout: fixed; }
+    .figma-examples > thead th:first-child { width: 43%; }
+    .figma-examples tbody th, .figma-examples tbody td { padding: 16px; }
+    .figma-examples tbody th { font-weight: 400; }
+    .figma-examples h3 { margin: 0 0 12px; }
+    .figma-examples figure { margin: 0 0 10px; }
+    .figma-examples img { display: block; width: 100%; max-height: 640px; object-fit: contain; object-position: left top; }
+    .plain-card-preview { background: #f8f4f8; border-radius: 10px; padding: 16px; }
+    .plain-card-title { font-size: 18px; }
+    .plain-card-preview ul { margin: 10px 0 0; padding: 0; list-style: none; }
+    .plain-card-preview li { display: grid; gap: 1px; background: #fff; border: 1px solid #e8e2e8; border-radius: 11px; padding: 10px 13px; }
+    .plain-card-preview li strong { font-weight: 550; }
+    .plain-card-preview li span { font-size: 13px; color: var(--muted); }
+    .detail-card-preview li { gap: 8px; }
+    .detail-preview-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .detail-preview-row > span { display: block; border: 1px solid #e8e2e8; border-radius: 6px; padding: 4px 6px; }
+    .detail-preview-row small { display: block; }
+    .figma-examples pre { margin: 8px 0 14px; }
+    .figma-examples .figma-json { margin-top: 14px; }
+    .figma-examples .wire-guide { color: var(--muted); margin: 10px 0; }
+    .figma-examples .figma-wire { max-height: 420px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .figma-examples .figma-wire code { overflow-wrap: anywhere; }
+    .figma-examples .example-parts { margin: 10px 0; padding-left: 19px; }
+    @media (max-width: 680px) { .figma-examples { min-width: 610px; } }
+  </style>
+  <script src="/assets/vendor/mermaid/mermaid.tiny.js" defer></script>
+  <script src="overview.js?v=2" defer></script>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="toolbar" data-online-only>
+      <a href="/research/a2ui-test/">Gen UI 콘솔</a>
+      <button class="export" id="export-html" type="button" disabled>오프라인 HTML 저장</button>
+    </div>
+    <p id="export-status" role="status" data-online-only></p>
+    <h1>A2UI 개념 정리</h1>
+    <p class="intro">서버가 JSON으로 화면을 설명하고 Android가 Compose로 그리는 과정을 살펴봅니다.</p>
+  </header>
+  <nav class="toc" aria-label="문서 목차">
+    <a href="#concept">A2UI 개념</a>
+    <a href="#catalog">기본 카탈로그</a>
+    <a href="#figma-examples">Figma 예제</a>
+    <a href="#custom-components">커스텀 컴포넌트</a>
+    <a href="#design">Figma와 기획</a>
+    <a href="#app-release">앱 재배포 조건</a>
+    <a href="#architecture">시스템 흐름</a>
+    <a href="#sources">공식 자료</a>
+  </nav>
+  <main>
+    <section id="concept">
+      <h2>A2UI는 무엇인가</h2>
+      <p><strong>A2UI(Agent to User Interface)</strong>는 서버나 에이전트가 UI의 구조와 값을 JSON 메시지로 전달하는 규약입니다. 앱의 렌더러는 카탈로그에 등록된 컴포넌트를 찾아 네이티브 화면을 그립니다. 레이아웃은 템플릿, 규칙 또는 LLM으로 만들 수 있습니다.</p>
+      <figure class="diagram" aria-labelledby="a2ui-flow-title">
+        <h3 id="a2ui-flow-title">디자인과 데이터가 단말 화면이 되기까지</h3>
+        <div class="diagram-render"></div>
+        <details><summary>Mermaid 원문</summary><pre><code class="mermaid-source">flowchart LR
+    F["Figma 문서"] --&gt; S["화면 API · 서버"]
+    C["Cloud Data"] --&gt; S
+    subgraph A["Client · 단말 앱"]
+      R["A2UI Renderer"] --&gt;|"그리기"| U["Surface · 화면 표시 영역"]
+    end
+    S --&gt;|"A2UI JSON · 컴포넌트와 데이터 모델"| R
+    A -.-&gt;|"API 호출"| S</code></pre></details>
+      </figure>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">용어</th><th scope="col">그림을 읽는 데 필요한 개념</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Surface</th><td>클라이언트에서 화면을 표시하는 영역입니다. Android Compose에서는 앱이 그 자리에 <code>A2uiSurface</code>를 배치합니다. 기기 목록 전체를 Surface 하나에 담고, 그 안의 <code>List</code>가 여러 <code>Card</code>를 표시할 수 있습니다.</td></tr>
+          <tr><th scope="row">컴포넌트</th><td>카드나 텍스트처럼 화면을 구성하는 요소입니다.</td></tr>
+          <tr><th scope="row">데이터 모델</th><td>기기 이름처럼 컴포넌트에 채울 값입니다. 컴포넌트가 데이터 경로를 참조하면 서버는 배치를 유지하면서 해당 값만 갱신할 수 있습니다.</td></tr>
+          <tr><th scope="row">카탈로그</th><td>렌더러가 사용할 수 있는 컴포넌트와 속성을 정한 계약입니다.</td></tr>
+        </tbody>
+      </table></div>
+      <h3>서버와 앱이 주고받는 메시지</h3>
+      <p>문서 예제의 메시지 형식에서는 <code>createSurface</code>가 화면 영역과 사용할 카탈로그를 정합니다. <code>updateComponents</code>는 <code>root</code>부터 자식 ID로 이어지는 화면 구조를 전달하고, <code>updateDataModel</code>은 텍스트나 상태에 바인딩할 값을 보냅니다. <code>deleteSurface</code>는 해당 영역을 제거합니다. 버튼 동작을 서버에 연결한 앱은 사용자의 선택을 액션 메시지로 보내고 후속 화면 변경을 받을 수 있습니다. <a href="https://a2ui.org/specification/v0.9.1-a2ui/">공식 메시지 사양</a></p>
+      <p>Android에서는 Compose 렌더러와 Material 3 기본 카탈로그가, iOS에서는 A2UI 프로젝트의 SwiftUI 렌더러와 <code>BasicCatalogSwiftUI</code>가 각 플랫폼의 기본 매핑을 제공합니다. 두 앱이 같은 프로토콜과 카탈로그 계약을 지원하면 같은 화면 JSON을 사용할 수 있고, 실제 스타일은 각 앱에서 정합니다. 팀 전용 타입을 공유하려면 지원할 플랫폼마다 렌더링을 연결합니다. <a href="https://a2ui.org/reference/renderers/">렌더러 목록</a> · <a href="https://github.com/a2ui-project/a2ui/blob/main/swift/sample/README.md">SwiftUI 샘플</a></p>
+    </section>
+
+    <section id="catalog">
+      <h2>기본 카탈로그</h2>
+      <p><strong>컴포넌트는 화면을 구성하는 요소</strong>이고, <strong>카탈로그는 어떤 컴포넌트와 속성을 쓸 수 있는지 정한 계약</strong>입니다. 예를 들어 <code>Card</code>는 컴포넌트이고, 공식 기본 카탈로그에는 <code>Card</code>가 자식 요소를 <code>child</code>로 받는다는 정의가 들어 있습니다.</p>
+      <p>서버는 Surface를 만들 때 사용할 카탈로그를 지정하고, 화면을 구성할 때 그 안의 컴포넌트를 골라 보냅니다. 목록에 카드를 열 장 표시해도, 카탈로그의 <code>Card</code> 타입 정의 하나를 열 번 사용하는 것입니다.</p>
+      <p>카탈로그는 <strong>컴포넌트 계약을 묶어 버전으로 관리하는 단위</strong>로 볼 수 있습니다. 예를 들어 팀이 <code>ColoredCard</code>의 필수 속성을 호환되지 않게 바꾼다면, <code>v2</code> 카탈로그를 만들어 이를 지원하는 앱에 적용할 수 있습니다. 이때 카탈로그 버전은 팀이 정한 컴포넌트 계약을, A2UI 프로토콜 버전은 서버와 앱이 주고받는 JSON 규칙을 가리킵니다.</p>
+      <p>이 문서의 기본 카탈로그 표에는 예제 형식에 해당하는 18종이 있습니다. 각 컴포넌트의 화면 예시와 속성을 나란히 볼 수 있습니다. 미리보기는 참고용이며 실제 모양은 앱의 렌더러와 테마에 따라 달라집니다.</p>
+      <p><strong>같은 컴포넌트도 카탈로그가 허용하는 속성과 값을 조합해 여러 형태로 사용할 수 있습니다.</strong> 예를 들어 0.9.1의 <code>Text</code>는 <code>variant: "h3"</code>로 제목을, <code>variant: "caption"</code>으로 보조 문구를 표현합니다. <code>Row</code>는 <code>justify: "spaceBetween"</code>과 <code>align: "center"</code>를 함께 써서 자식을 양쪽에 벌리고 세로 중앙에 맞춥니다.</p>
+      <p><code>variant</code>는 일부 컴포넌트가 제공하는 속성 이름입니다. <code>Row</code>처럼 여러 속성을 조합해 배치를 바꾸거나, <code>Card → Column → Text</code>처럼 컴포넌트를 조립해 화면 구성을 바꿀 수도 있습니다. 원하는 색상이나 동작이 현재 계약에 없다면, 테마로 적용할지 컴포넌트를 확장할지 결정합니다.</p>
+      <p>표는 <strong>A2UI 0.9.1 공식 기본 카탈로그</strong> 기준입니다. 속성 이름은 JSON의 키이며, 값을 바꾸면 렌더러에 전달하는 동작이나 표현이 달라집니다. <code>id</code>와 <code>component</code>는 공통으로 필요하고, <code>accessibility</code>로 접근성 정보를 전달할 수 있습니다. <code>weight</code>는 <code>Row</code>나 <code>Column</code>의 직접 자식에 주는 상대 비율입니다. <a href="https://a2ui.org/specification/v0.9.1-basic-catalog-implementation-guide/">공식 기본 카탈로그 가이드</a></p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="기본 컴포넌트와 화면 예시"><table class="basic-components">
+        <thead><tr><th scope="col">분류</th><th scope="col">컴포넌트</th><th scope="col">화면 예시</th><th scope="col">속성 · 값 · 동작 · 주의</th></tr></thead>
+        <tbody>
+          <tr><td>표시</td><th scope="row"><code>Text</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="text-demo"><strong class="title-sample">우리 집 기기</strong><span>거실 공기청정기</span><small>공기청정기 · 예시 데이터</small></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>text</code> <span class="required-property">필수</span></dt><dd><span class="property-values">문자열 또는 데이터 바인딩</span> 표시할 문구를 정합니다. 예를 들어 기기 이름을 데이터 모델에서 받아 표시합니다.</dd></div>
+              <div><dt><code>variant</code></dt><dd><span class="property-values">h1 · h2 · h3 · h4 · h5 · body · caption</span> 제목, 본문, 보조 문구 중 어떤 스타일로 그릴지 정합니다. 기본값은 body입니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>size</code>, <code>color</code>, <code>style</code>은 기본 Text 속성에 없습니다. <code>variant</code>에 해당하는 실제 글자 크기, 두께, 색상은 앱 테마와 렌더러에서 정합니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>표시</td><th scope="row"><code>Image</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><img class="device-image" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgMTYwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9Iuqzteq4sOyyreygleq4sCDsmIjsi5wg7J2865+s7Iqk7Yq4Ij48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE2MCIgcng9IjE4IiBmaWxsPSIjZTlmMGY5Ii8+PGVsbGlwc2UgY3g9IjE1MCIgY3k9IjE0MCIgcng9IjcwIiByeT0iOCIgZmlsbD0iI2NjZDllYSIvPjxyZWN0IHg9IjExMCIgeT0iMjUiIHdpZHRoPSI4MCIgaGVpZ2h0PSIxMTEiIHJ4PSIxNyIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjYThiZGQ2IiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIxMTkiIHk9IjM1IiB3aWR0aD0iNjIiIGhlaWdodD0iMjUiIHJ4PSIxMCIgZmlsbD0iIzM0NDk2OCIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjQ3IiByPSI0IiBmaWxsPSIjNWNkN2JjIi8+PGcgc3Ryb2tlPSIjY2JkN2U2IiBzdHJva2Utd2lkdGg9IjMiPjxwYXRoIGQ9Ik0xMjUgNzhoNTBNMTI1IDg4aDUwTTEyNSA5OGg1ME0xMjUgMTA4aDUwTTEyNSAxMThoNTAiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODdiOGRhIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTgyIDY1cS0yNS0xMi01LTI2TTIxOCA2NXEyNS0xMiA1LTI2Ii8+PC9nPjwvc3ZnPgo=" alt="공기청정기를 그린 예시 이미지"><span class="preview-caption">기기 이미지 예시</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>url</code> <span class="required-property">필수</span></dt><dd><span class="property-values">이미지 URL</span> 표시할 이미지의 주소를 지정합니다.</dd></div>
+              <div><dt><code>description</code></dt><dd><span class="property-values">예: 공기청정기 제품 사진</span> 이미지의 접근성 설명을 지정합니다.</dd></div>
+              <div><dt><code>fit</code></dt><dd><span class="property-values">contain · cover · fill · none · scaleDown</span> 전체가 보이게 맞추거나, 잘라서 영역을 채우거나, 늘리는 등의 동작을 정합니다.</dd></div>
+              <div><dt><code>variant</code></dt><dd><span class="property-values">icon · avatar · smallFeature · mediumFeature · largeFeature · header</span> 아이콘, 아바타, 대표 이미지처럼 이미지의 용도와 크기를 렌더러에 전달합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>variant</code>는 용도에 대한 힌트입니다. 정확한 픽셀 크기를 지정하는 속성은 없고, <code>cover</code>는 이미지의 일부를 자를 수 있습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>표시</td><th scope="row"><code>Icon</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="icon-demo"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5M5 9v12h5v-7h4v7h5V9"/></svg><small>home</small></span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6M20 7l-3-3"/></svg><small>refresh</small></span><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></svg><small>phone</small></span></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>name</code> <span class="required-property">필수</span></dt><dd><span class="property-values">예: home · refresh · warning, 또는 svgPath 객체</span> 카탈로그의 아이콘 이름이나 SVG 경로로 표시할 기호를 고릅니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>name</code>에는 카탈로그가 정한 아이콘 이름이나 <code>svgPath</code> 형식을 사용합니다. 임의 아이콘 이름이나 개별 크기·색상 속성은 기본 정의에 없습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>미디어</td><th scope="row"><code>Video</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="video-demo"><div class="video-scene"><span class="play-symbol">▶</span><span>기기 사용 안내</span></div><div class="media-controls"><span>▶</span><div class="media-track"><i></i></div><small>0:00 / 0:30</small></div></div><span class="preview-caption">재생 화면 모형 · 영상 없음</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>url</code> <span class="required-property">필수</span></dt><dd><span class="property-values">영상 URL</span> 렌더러가 재생할 영상의 주소를 지정합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>0.9.1 기본 Video는 URL을 받습니다. 재생 컨트롤·자동 재생 정책은 앱 플레이어에 따르며, <code>posterUrl</code>은 1.0에서 추가됐습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>미디어</td><th scope="row"><code>AudioPlayer</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="audio-demo"><strong>음성 안내</strong><div class="media-controls"><span class="audio-play">▶</span><div class="media-track"><i></i></div><small>0:12</small></div></div><span class="preview-caption">재생 화면 모형 · 음원 없음</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>url</code> <span class="required-property">필수</span></dt><dd><span class="property-values">오디오 URL</span> 렌더러가 재생할 음원의 주소를 지정합니다.</dd></div>
+              <div><dt><code>description</code></dt><dd><span class="property-values">예: 기기 사용 안내</span> 음원의 제목이나 설명을 제공합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>오디오 재생에는 앱의 플레이어가 연결돼 있어야 합니다. 반복 재생이나 배속 같은 설정은 기본 속성에 없습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>Row</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="layout-guide horizontal"><span class="layout-tag">Row</span><div class="ghost-box">이미지</div><div class="ghost-box">이름</div><div class="ghost-box">종류</div></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>children</code> <span class="required-property">필수</span></dt><dd><span class="property-values">자식 ID 배열 또는 목록 템플릿</span> ID 순서대로 자식을 그립니다. 목록 템플릿은 데이터의 각 항목에 같은 구성을 반복합니다.</dd></div>
+              <div><dt><code>justify</code></dt><dd><span class="property-values">start · center · end · spaceBetween · spaceAround · spaceEvenly · stretch</span> 배치 방향을 따라 자식과 간격을 정렬합니다. 기본값은 start입니다.</dd></div>
+              <div><dt><code>align</code></dt><dd><span class="property-values">start · center · end · stretch</span> 자식을 위쪽, 세로 중앙, 아래쪽에 맞추거나 세로로 늘립니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>가로 한 줄입니다. 여러 행은 <code>Column</code>에 <code>Row</code>를 여러 개 넣습니다. 고정 <code>width</code> 속성은 없으며 자식의 <code>weight</code>는 상대 비율입니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>Column</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="layout-guide vertical"><span class="layout-tag">Column</span><div class="ghost-box">거실 공기청정기</div><div class="ghost-box">공기청정기</div></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>children</code> <span class="required-property">필수</span></dt><dd><span class="property-values">자식 ID 배열 또는 목록 템플릿</span> ID 순서대로 자식을 그립니다. 목록 템플릿은 데이터의 각 항목에 같은 구성을 반복합니다.</dd></div>
+              <div><dt><code>justify</code></dt><dd><span class="property-values">start · center · end · spaceBetween · spaceAround · spaceEvenly · stretch</span> 배치 방향을 따라 자식과 간격을 정렬합니다. 기본값은 start입니다.</dd></div>
+              <div><dt><code>align</code></dt><dd><span class="property-values">start · center · end · stretch</span> 자식을 가로 방향에서 시작, 중앙, 끝에 맞추거나 가로로 늘립니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>세로 한 열입니다. 가로나 격자 구조는 <code>Row</code>를 조합합니다. 고정 <code>height</code>나 자식 간격을 픽셀로 받는 <code>gap</code> 속성은 없습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>List</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="list-demo"><div><span class="list-index">1</span><span>거실 공기청정기<small>공기청정기</small></span></div><div><span class="list-index">2</span><span>침실 조명<small>조명</small></span></div><div><span class="list-index">3</span><span>내 휴대폰<small>MOBILE</small></span></div></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>children</code> <span class="required-property">필수</span></dt><dd><span class="property-values">자식 ID 배열 또는 목록 템플릿</span> ID 순서대로 자식을 그립니다. 목록 템플릿은 데이터의 각 항목에 같은 구성을 반복합니다.</dd></div>
+              <div><dt><code>direction</code></dt><dd><span class="property-values">vertical · horizontal</span> 항목을 세로 또는 가로로 나열합니다. 기본값은 vertical입니다.</dd></div>
+              <div><dt><code>align</code></dt><dd><span class="property-values">start · center · end · stretch</span> 배치 방향과 직각인 방향으로 자식을 정렬합니다. 기본값은 stretch입니다.</dd></div>
+              <div><dt><code>listStyle</code></dt><dd><span class="property-values">ordered · unordered · none</span> 번호 목록, 글머리 기호, 표시 없음 중 하나를 지정합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>horizontal</code>은 가로 목록 방향입니다. 한 페이지씩 스냅하는 동작이나 현재 페이지를 표시하는 점은 기본 List에 정의되어 있지 않습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>Card</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="sample-card"><span class="card-glyph">⌂</span><strong>거실 공기청정기</strong><small>공기청정기</small></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>child</code> <span class="required-property">필수</span></dt><dd><span class="property-values">자식 컴포넌트 ID 하나</span> 카드 안에 지정한 자식을 그립니다. 여러 요소를 담을 때는 Row나 Column의 ID를 연결합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>child</code>는 자식 ID 하나를 받습니다. 카드별 배경색, 모서리 반경, 그림자, 클릭 액션은 기본 Card 속성에 없습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>Tabs</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="tabs-demo"><div class="tab-buttons" role="tablist" aria-label="예시 기기 탭"><button type="button" role="tab" id="all-tab" aria-selected="true" aria-controls="all-panel" data-demo-tab="all">전체</button><button type="button" role="tab" id="mobile-tab" aria-selected="false" tabindex="-1" aria-controls="mobile-panel" data-demo-tab="mobile">휴대폰</button></div><div role="tabpanel" id="all-panel" aria-labelledby="all-tab">거실 공기청정기<br>내 휴대폰</div><div role="tabpanel" id="mobile-panel" aria-labelledby="mobile-tab" hidden>내 휴대폰</div></div><span class="preview-caption">전체 탭이 선택된 모습</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>tabs</code> <span class="required-property">필수</span></dt><dd><span class="property-values">title과 child를 가진 항목의 배열</span> 탭 이름을 표시하고, 선택한 탭과 연결된 자식 컴포넌트를 그립니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>탭마다 <code>title</code>과 <code>child</code>를 지정합니다. 스와이프 전환이나 페이지 표시점은 기본 Tabs에서 지정할 수 있는 옵션이 아닙니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>Modal</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="modal-scene"><div class="modal-underlay"><span>기기 목록</span><span>거실 공기청정기</span></div><div class="modal-scrim"></div><div class="modal-illustration"><strong>기기 정보</strong><span>이름과 종류를 확인하세요.</span><span class="fake-action">확인</span></div></div><span class="preview-caption">열린 모습의 축소 모형</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>trigger</code> <span class="required-property">필수</span></dt><dd><span class="property-values">여는 요소의 ID</span> 누르거나 상호작용하면 모달을 엽니다.</dd></div>
+              <div><dt><code>content</code> <span class="required-property">필수</span></dt><dd><span class="property-values">모달 내용의 ID</span> 모달이 열린 상태에서 표시할 UI를 지정합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>여는 요소와 내용은 각각 이미 정의된 컴포넌트 ID를 참조합니다. 모달 크기와 애니메이션을 JSON에 직접 지정하는 기본 속성은 없습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>배치</td><th scope="row"><code>Divider</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="divider-demo"><span>기기 이름</span><hr><span>기기 종류</span></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>axis</code></dt><dd><span class="property-values">horizontal · vertical</span> 가로선 또는 세로선을 그립니다. 기본값은 horizontal입니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>axis</code>는 방향만 지정합니다. 가로선 길이, 굵기, 색상은 앱의 레이아웃과 렌더러가 정합니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>입력</td><th scope="row"><code>Button</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="button-demo"><button type="button" class="primary-button" id="action-demo">새로고침</button><output id="action-result" aria-live="polite">새로고침 액션 예시</output></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>child</code> <span class="required-property">필수</span></dt><dd><span class="property-values">Text나 Icon 등 자식 ID</span> 버튼 안에 라벨이나 아이콘을 그립니다.</dd></div>
+              <div><dt><code>action</code> <span class="required-property">필수</span></dt><dd><span class="property-values">event 또는 functionCall</span> 누르면 지정한 이벤트를 전달하거나 함수를 호출합니다.</dd></div>
+              <div><dt><code>variant</code></dt><dd><span class="property-values">default · primary · borderless</span> 일반, 강조, 테두리 없는 버튼 형태를 고릅니다.</dd></div>
+              <div><dt><code>checks</code></dt><dd><span class="property-values">조건과 오류 문구의 배열</span> 동작 또는 입력이 조건을 만족하는지 검사합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>action.event</code>는 이벤트 이름과 데이터를 전달합니다. 상세 화면 이동이나 데이터 저장은 그 이벤트를 처리하는 앱 또는 서버 로직과 연결해야 합니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>입력</td><th scope="row"><code>TextField</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><label class="field-demo"><span>기기 이름</span><input type="text" value="거실 공기청정기" autocomplete="off"></label><span class="preview-caption">기기 이름 입력 예시</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>label</code> <span class="required-property">필수</span></dt><dd><span class="property-values">예: 기기 이름</span> 입력칸의 이름을 표시합니다.</dd></div>
+              <div><dt><code>value</code></dt><dd><span class="property-values">문자열 또는 데이터 바인딩</span> 현재 값을 표시합니다. 데이터 모델에 바인딩하면 편집한 값을 연결할 수 있습니다.</dd></div>
+              <div><dt><code>variant</code></dt><dd><span class="property-values">shortText · longText · number · obscured</span> 짧은 텍스트, 긴 텍스트, 숫자, 가려진 입력을 선택합니다.</dd></div>
+              <div><dt><code>validationRegexp</code></dt><dd><span class="property-values">정규식 문자열</span> 입력값을 검사할 규칙을 지정합니다.</dd></div>
+              <div><dt><code>checks</code></dt><dd><span class="property-values">조건과 오류 문구의 배열</span> 동작 또는 입력이 조건을 만족하는지 검사합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>입력값을 다른 컴포넌트나 제출 동작에서 쓰려면 <code>value</code>를 데이터 모델 경로에 연결하세요. <code>label</code>은 입력칸 이름이며 0.9.1에는 <code>placeholder</code>가 없습니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>입력</td><th scope="row"><code>CheckBox</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="choice-demo"><label><input type="checkbox" checked> 즐겨찾기에 추가</label><label><input type="checkbox"> 알림 받기</label></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>label</code> <span class="required-property">필수</span></dt><dd><span class="property-values">예: 알림 받기</span> 체크박스 옆의 문구를 표시합니다.</dd></div>
+              <div><dt><code>value</code> <span class="required-property">필수</span></dt><dd><span class="property-values">true · false 또는 데이터 바인딩</span> 선택 여부를 읽고, 바인딩한 값에 변경사항을 반영합니다.</dd></div>
+              <div><dt><code>checks</code></dt><dd><span class="property-values">조건과 오류 문구의 배열</span> 동작 또는 입력이 조건을 만족하는지 검사합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>현재 선택 상태를 바꾸려면 <code>value</code>를 데이터에 연결합니다. 체크 표시를 바꾸는 것과 서비스에 설정을 저장하는 것은 별도 동작입니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>입력</td><th scope="row"><code>ChoicePicker</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><fieldset class="choice-demo"><legend>기기 종류</legend><label><input type="radio" name="demo-kind" value="all" checked> 전체</label><label><input type="radio" name="demo-kind" value="mobile"> 휴대폰</label><label><input type="radio" name="demo-kind" value="light"> 조명</label></fieldset></div></div></td><td><dl class="component-properties">
+              <div><dt><code>options</code> <span class="required-property">필수</span></dt><dd><span class="property-values">label과 value를 가진 항목 배열</span> 표시 문구와 저장할 값을 가진 선택지를 만듭니다.</dd></div>
+              <div><dt><code>value</code> <span class="required-property">필수</span></dt><dd><span class="property-values">문자열 배열 또는 데이터 바인딩</span> 선택된 항목의 값을 담습니다. 단일 선택도 배열을 사용합니다.</dd></div>
+              <div><dt><code>label</code></dt><dd><span class="property-values">예: 기기 종류</span> 선택 그룹의 이름을 표시합니다.</dd></div>
+              <div><dt><code>variant</code></dt><dd><span class="property-values">mutuallyExclusive · multipleSelection</span> 하나 또는 여러 개를 고를 수 있게 합니다.</dd></div>
+              <div><dt><code>displayStyle</code></dt><dd><span class="property-values">checkbox · chips</span> 선택지를 체크 방식 또는 칩 형태로 표시합니다.</dd></div>
+              <div><dt><code>filterable</code></dt><dd><span class="property-values">true · false</span> 선택지 검색을 제공할지 정합니다.</dd></div>
+              <div><dt><code>checks</code></dt><dd><span class="property-values">조건과 오류 문구의 배열</span> 동작 또는 입력이 조건을 만족하는지 검사합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd>단일 선택도 선택값은 문자열 배열입니다. <code>options</code>의 <code>label</code>은 표시 문구이고 <code>value</code>는 데이터에 저장할 식별값입니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>입력</td><th scope="row"><code>Slider</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><div class="slider-demo"><label for="brightness">밝기 <output id="brightness-value" for="brightness">65%</output></label><input type="range" id="brightness" min="0" max="100" value="65"><div class="range-labels"><span>0</span><span>100</span></div></div></div></div></td><td><dl class="component-properties">
+              <div><dt><code>value</code> <span class="required-property">필수</span></dt><dd><span class="property-values">숫자 또는 데이터 바인딩</span> 현재 슬라이더 위치를 지정합니다.</dd></div>
+              <div><dt><code>min</code></dt><dd><span class="property-values">숫자 · 기본값 0</span> 조절 범위의 시작 값을 지정합니다.</dd></div>
+              <div><dt><code>max</code> <span class="required-property">필수</span></dt><dd><span class="property-values">숫자</span> 조절 범위의 끝 값을 지정합니다.</dd></div>
+              <div><dt><code>label</code></dt><dd><span class="property-values">예: 밝기</span> 슬라이더의 이름을 표시합니다.</dd></div>
+              <div><dt><code>checks</code></dt><dd><span class="property-values">조건과 오류 문구의 배열</span> 동작 또는 입력이 조건을 만족하는지 검사합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>min</code>과 <code>max</code>는 범위를 정합니다. 일정한 간격으로 멈추도록 하는 <code>steps</code>는 1.0에서 추가됐고, 값 변경을 실제 제어에 쓰려면 동작을 연결해야 합니다.</dd></div>
+            </dl></td></tr>
+          <tr><td>입력</td><th scope="row"><code>DateTimeInput</code></th>
+            <td class="catalog-preview-cell"><div inert><div class="preview"><label class="field-demo"><span>예약 시간</span><input type="datetime-local" value="2026-11-22T08:00"></label><span class="preview-caption">브라우저에 따라 선택 UI가 달라집니다</span></div></div></td><td><dl class="component-properties">
+              <div><dt><code>value</code> <span class="required-property">필수</span></dt><dd><span class="property-values">ISO 8601 문자열 또는 데이터 바인딩</span> 선택한 날짜·시간을 표시합니다. 미선택 상태는 빈 문자열로 시작할 수 있습니다.</dd></div>
+              <div><dt><code>enableDate</code></dt><dd><span class="property-values">true · false</span> 날짜 입력을 활성화할지 정합니다.</dd></div>
+              <div><dt><code>enableTime</code></dt><dd><span class="property-values">true · false</span> 시간 입력을 활성화할지 정합니다.</dd></div>
+              <div><dt><code>min</code></dt><dd><span class="property-values">ISO 8601 날짜·시간 또는 바인딩</span> 선택 가능한 시작 값을 지정합니다.</dd></div>
+              <div><dt><code>max</code></dt><dd><span class="property-values">ISO 8601 날짜·시간 또는 바인딩</span> 선택 가능한 끝 값을 지정합니다.</dd></div>
+              <div><dt><code>label</code></dt><dd><span class="property-values">예: 예약 시간</span> 입력의 이름을 표시합니다.</dd></div>
+              <div><dt><code>checks</code></dt><dd><span class="property-values">조건과 오류 문구의 배열</span> 동작 또는 입력이 조건을 만족하는지 검사합니다.</dd></div>
+              <div class="component-caution"><dt>주의</dt><dd><code>enableDate</code>나 <code>enableTime</code>을 켜야 해당 입력을 표시합니다. 데이터에 저장할 ISO 8601 값과 앱에 보여줄 지역별 표시 형식은 구분합니다.</dd></div>
+            </dl></td></tr>
+        </tbody>
+      </table></div>
+      <p>화면에서 이미지나 미디어를 쓰려면 서버가 해당 컴포넌트를 생성할 수 있어야 하고, 앱에는 이미지 로더나 재생 구현이 연결되어 있어야 합니다.</p>
+
+    </section>
+
+    <section id="figma-examples">
+      <h2>Figma 디자인을 A2UI로 구성하는 예제</h2>
+      <p>콘솔의 네 가지 디자인을 기준으로 화면 구조가 어떤 컴포넌트와 속성으로 전달되는지 비교합니다. 1~3번은 Figma 디자인을 참고했고 4번은 콘솔의 디자인 미리보기를 사용합니다. 표의 JSON은 문서용 예시 데이터로 만든 A2UI 0.9.1 메시지이며, 1·2번은 기본 카탈로그만으로 재구성했습니다.</p>
+      <p>기획과 디자인 검토에서는 미리보기와 오른쪽의 컴포넌트 구성을 보면 됩니다. 전체 JSON은 개발자가 데이터 연결과 렌더링 결과를 확인할 때 참고할 수 있습니다.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Figma 미리보기와 A2UI 구성 비교">
+        <table class="figma-examples">
+          <thead><tr><th scope="col">Figma 미리보기</th><th scope="col">A2UI 구성 · JSON</th></tr></thead>
+          <tbody>
+            <tr id="figma-basic-card">
+              <th scope="row">
+                <h3>1번 · 단순 기기 카드</h3>
+                <figure>
+                  <div class="plain-card-preview">
+                    <strong class="plain-card-title">기기 목록</strong>
+                    <ul>
+                    <li><strong>Living room sensor</strong><span>ZIGBEE</span></li>
+                    <li><strong>Sample phone</strong><span>MOBILE</span></li>
+                    <li><strong>Kitchen hub</strong><span>HUB</span></li>
+                    </ul>
+                  </div>
+                  <figcaption>Figma 1번의 배치를 기본 카탈로그로 재구성한 미리보기</figcaption>
+                </figure>
+              </th>
+              <td>
+                <p><strong>List → Card → Column → Text + Text</strong></p>
+                <p>기기마다 카드 하나를 만들고, 안에 이름과 종류를 세로로 배치합니다. 이름과 종류는 데이터 모델에서 가져오며, 카드 외형은 기본 테마를 따릅니다.</p>
+                <details class="figma-json">
+                  <summary>A2UI 메시지 전체 보기 · 개발 참고</summary>
+                  <ol class="wire-guide">
+                    <li><code>createSurface</code>가 화면 영역과 사용할 카탈로그를 지정합니다.</li>
+                    <li><code>updateDataModel</code>이 표시할 값을 전달합니다.</li>
+                    <li><code>updateComponents</code>가 화면 구조를 지정합니다. <code>child</code>와 <code>children</code>은 같은 배열 안의 다른 <code>id</code>를 가리킵니다.</li>
+                  </ol>
+                  <pre class="figma-wire" tabindex="0" aria-label="전체 A2UI JSON"><code>[
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;createSurface&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-1&quot;,
+      &quot;catalogId&quot;: &quot;https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json&quot;
+    }
+  },
+
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateDataModel&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-1&quot;,
+      &quot;path&quot;: &quot;/&quot;,
+      &quot;value&quot;: {
+        &quot;title&quot;: &quot;기기 목록&quot;,
+        &quot;devices&quot;: [
+          {
+            &quot;name&quot;: &quot;Living room sensor&quot;,
+            &quot;kind&quot;: &quot;ZIGBEE&quot;
+          },
+          {
+            &quot;name&quot;: &quot;Sample phone&quot;,
+            &quot;kind&quot;: &quot;MOBILE&quot;
+          },
+          {
+            &quot;name&quot;: &quot;Kitchen hub&quot;,
+            &quot;kind&quot;: &quot;HUB&quot;
+          }
+        ]
+      }
+    }
+  },
+
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateComponents&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-1&quot;,
+      &quot;components&quot;: [
+        {&quot;id&quot;: &quot;root&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;title&quot;, &quot;devices&quot;]},
+        {&quot;id&quot;: &quot;title&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/title&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;devices&quot;, &quot;component&quot;: &quot;List&quot;, &quot;direction&quot;: &quot;vertical&quot;, &quot;children&quot;: [&quot;c3&quot;, &quot;c7&quot;, &quot;c11&quot;]},
+        {&quot;id&quot;: &quot;c3&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c4&quot;},
+        {&quot;id&quot;: &quot;c4&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c5&quot;, &quot;c6&quot;]},
+        {&quot;id&quot;: &quot;c5&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/0/name&quot;}},
+        {&quot;id&quot;: &quot;c6&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/0/kind&quot;}},
+        {&quot;id&quot;: &quot;c7&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c8&quot;},
+        {&quot;id&quot;: &quot;c8&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c9&quot;, &quot;c10&quot;]},
+        {&quot;id&quot;: &quot;c9&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/1/name&quot;}},
+        {&quot;id&quot;: &quot;c10&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/1/kind&quot;}},
+        {&quot;id&quot;: &quot;c11&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c12&quot;},
+        {&quot;id&quot;: &quot;c12&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c13&quot;, &quot;c14&quot;]},
+        {&quot;id&quot;: &quot;c13&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/2/name&quot;}},
+        {&quot;id&quot;: &quot;c14&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/2/kind&quot;}}
+      ]
+    }
+  }
+]</code></pre>
+                </details>
+              </td>
+            </tr>
+            <tr id="figma-basic-detail-card">
+              <th scope="row">
+                <h3>2번 · 상세 기기 카드</h3>
+                <figure>
+                  <div class="plain-card-preview detail-card-preview">
+                    <strong class="plain-card-title">기기 목록 · 상세</strong>
+                    <ul>
+                    <li>
+                      <div class="detail-preview-row"><span>SmartThings</span><span>읽기 전용</span></div>
+                      <strong>Living room sensor</strong>
+                      <div class="detail-preview-row">
+                        <span><small>기기 종류</small>센서</span>
+                        <span><small>플랫폼 타입</small>ZIGBEE</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div class="detail-preview-row"><span>SmartThings</span><span>읽기 전용</span></div>
+                      <strong>Sample phone</strong>
+                      <div class="detail-preview-row">
+                        <span><small>기기 종류</small>휴대폰</span>
+                        <span><small>플랫폼 타입</small>MOBILE</span>
+                      </div>
+                    </li>
+                    </ul>
+                  </div>
+                  <figcaption>Figma 2번의 배치를 기본 카탈로그로 재구성한 미리보기</figcaption>
+                </figure>
+              </th>
+              <td>
+                <p><strong>Card → Column → Row + Text + Row</strong></p>
+                <p>기기마다 상세 카드 한 장을 만들고, 카드 안을 세 구역으로 나눕니다. 전체 구성에 기본 카탈로그를 사용합니다.</p>
+                <ul class="example-parts">
+                  <li><strong>상단</strong> · 두 라벨을 <code>Row</code>로 나란히 배치합니다.</li>
+                  <li><strong>가운데</strong> · 기기 이름을 <code>Text</code> 제목 스타일로 표시합니다.</li>
+                  <li><strong>하단</strong> · 기기 종류와 플랫폼 타입을 작은 <code>Card</code> 두 장에 표시합니다.</li>
+                </ul>
+                <details class="figma-json">
+                  <summary>A2UI 메시지 전체 보기 · 개발 참고</summary>
+                  <ol class="wire-guide">
+                    <li><code>createSurface</code>가 화면 영역과 사용할 카탈로그를 지정합니다.</li>
+                    <li><code>updateDataModel</code>이 표시할 값을 전달합니다.</li>
+                    <li><code>updateComponents</code>가 화면 구조를 지정합니다. <code>child</code>와 <code>children</code>은 같은 배열 안의 다른 <code>id</code>를 가리킵니다.</li>
+                  </ol>
+                  <pre class="figma-wire" tabindex="0" aria-label="전체 A2UI JSON"><code>[
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;createSurface&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-2&quot;,
+      &quot;catalogId&quot;: &quot;https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json&quot;
+    }
+  },
+
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateDataModel&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-2&quot;,
+      &quot;path&quot;: &quot;/&quot;,
+      &quot;value&quot;: {
+        &quot;title&quot;: &quot;기기 목록 · 상세&quot;,
+        &quot;devices&quot;: [
+          {
+            &quot;name&quot;: &quot;Living room sensor&quot;,
+            &quot;kind&quot;: &quot;센서&quot;,
+            &quot;type&quot;: &quot;ZIGBEE&quot;
+          },
+          {
+            &quot;name&quot;: &quot;Sample phone&quot;,
+            &quot;kind&quot;: &quot;휴대폰&quot;,
+            &quot;type&quot;: &quot;MOBILE&quot;
+          }
+        ]
+      }
+    }
+  },
+
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateComponents&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-2&quot;,
+      &quot;components&quot;: [
+        {&quot;id&quot;: &quot;root&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;title&quot;, &quot;devices&quot;]},
+        {&quot;id&quot;: &quot;title&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/title&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;devices&quot;, &quot;component&quot;: &quot;List&quot;, &quot;direction&quot;: &quot;vertical&quot;, &quot;children&quot;: [&quot;c3&quot;, &quot;c24&quot;]},
+        {&quot;id&quot;: &quot;c3&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c4&quot;},
+        {&quot;id&quot;: &quot;c4&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c5&quot;, &quot;c12&quot;, &quot;c13&quot;]},
+        {&quot;id&quot;: &quot;c5&quot;, &quot;component&quot;: &quot;Row&quot;, &quot;justify&quot;: &quot;stretch&quot;, &quot;children&quot;: [&quot;c6&quot;, &quot;c9&quot;]},
+        {&quot;id&quot;: &quot;c6&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c7&quot;},
+        {&quot;id&quot;: &quot;c7&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c8&quot;]},
+        {&quot;id&quot;: &quot;c8&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;SmartThings&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c9&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c10&quot;},
+        {&quot;id&quot;: &quot;c10&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c11&quot;]},
+        {&quot;id&quot;: &quot;c11&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;읽기 전용&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c12&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/0/name&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;c13&quot;, &quot;component&quot;: &quot;Row&quot;, &quot;justify&quot;: &quot;stretch&quot;, &quot;children&quot;: [&quot;c14&quot;, &quot;c19&quot;]},
+        {&quot;id&quot;: &quot;c14&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c15&quot;},
+        {&quot;id&quot;: &quot;c15&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c16&quot;]},
+        {&quot;id&quot;: &quot;c16&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c17&quot;, &quot;c18&quot;]},
+        {&quot;id&quot;: &quot;c17&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;기기 종류&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c18&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/0/kind&quot;}, &quot;variant&quot;: &quot;body&quot;},
+        {&quot;id&quot;: &quot;c19&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c20&quot;},
+        {&quot;id&quot;: &quot;c20&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c21&quot;]},
+        {&quot;id&quot;: &quot;c21&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c22&quot;, &quot;c23&quot;]},
+        {&quot;id&quot;: &quot;c22&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;플랫폼 타입&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c23&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/0/type&quot;}, &quot;variant&quot;: &quot;body&quot;},
+        {&quot;id&quot;: &quot;c24&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c25&quot;},
+        {&quot;id&quot;: &quot;c25&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c26&quot;, &quot;c33&quot;, &quot;c34&quot;]},
+        {&quot;id&quot;: &quot;c26&quot;, &quot;component&quot;: &quot;Row&quot;, &quot;justify&quot;: &quot;stretch&quot;, &quot;children&quot;: [&quot;c27&quot;, &quot;c30&quot;]},
+        {&quot;id&quot;: &quot;c27&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c28&quot;},
+        {&quot;id&quot;: &quot;c28&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c29&quot;]},
+        {&quot;id&quot;: &quot;c29&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;SmartThings&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c30&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c31&quot;},
+        {&quot;id&quot;: &quot;c31&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c32&quot;]},
+        {&quot;id&quot;: &quot;c32&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;읽기 전용&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c33&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/1/name&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;c34&quot;, &quot;component&quot;: &quot;Row&quot;, &quot;justify&quot;: &quot;stretch&quot;, &quot;children&quot;: [&quot;c35&quot;, &quot;c40&quot;]},
+        {&quot;id&quot;: &quot;c35&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c36&quot;},
+        {&quot;id&quot;: &quot;c36&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c37&quot;]},
+        {&quot;id&quot;: &quot;c37&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c38&quot;, &quot;c39&quot;]},
+        {&quot;id&quot;: &quot;c38&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;기기 종류&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c39&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/1/kind&quot;}, &quot;variant&quot;: &quot;body&quot;},
+        {&quot;id&quot;: &quot;c40&quot;, &quot;component&quot;: &quot;Card&quot;, &quot;child&quot;: &quot;c41&quot;},
+        {&quot;id&quot;: &quot;c41&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c42&quot;]},
+        {&quot;id&quot;: &quot;c42&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;children&quot;: [&quot;c43&quot;, &quot;c44&quot;]},
+        {&quot;id&quot;: &quot;c43&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: &quot;플랫폼 타입&quot;, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;c44&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/devices/1/type&quot;}, &quot;variant&quot;: &quot;body&quot;}
+      ]
+    }
+  }
+]</code></pre>
+                </details>
+              </td>
+            </tr>
+            <tr id="figma-air-care">
+              <th scope="row">
+                <h3>3번 · 에어 케어</h3>
+                <figure><img data-offline-image src="../a2ui-test/figma-sample-3.svg" alt="에어 케어 첫 페이지와 두 번째 페이지를 나란히 그린 미리보기"><figcaption>두 페이지를 나란히 재구성한 미리보기</figcaption></figure>
+                <a href="https://www.figma.com/design/varCN4OTZQfNueiyhd2Ob2?node-id=9-59">Figma 디자인</a>
+              </th>
+              <td>
+                <p><strong>커스텀 AirCarePager 안에 기본 컴포넌트로 만든 페이지 두 개를 넣습니다.</strong></p>
+                <ul class="example-parts">
+                  <li><strong>1페이지</strong> · 야외, 거실, 우리방의 상태를 가로로 배치합니다.</li>
+                  <li><strong>2페이지</strong> · 준우방과 침실의 상태를 가로로 배치합니다.</li>
+                  <li><strong>기본 컴포넌트</strong> · 각 페이지의 <code>Row</code> 안에 공간별 <code>Column</code>을 두고, 기호·이름·상태를 <code>Text</code>로 표시합니다.</li>
+                  <li><strong>커스텀 컴포넌트</strong> · <code>AirCarePager</code>가 두 페이지를 받아 스와이프나 하단 점 선택으로 전환합니다. 한 번에 한 페이지가 표시되고, 현재 페이지에 맞춰 활성 점이 바뀝니다.</li>
+                </ul>
+                <p>서버는 각 페이지의 구성과 예시 공기질 값을 전달합니다. Android는 받은 두 페이지 사이를 앱 안에서 전환합니다.</p>
+                <details class="figma-json">
+                  <summary>A2UI 메시지 전체 보기 · 개발 참고</summary>
+                  <ol class="wire-guide">
+                    <li><code>createSurface</code>에서 <code>AirCarePager</code>가 등록된 카탈로그를 지정합니다.</li>
+                    <li><code>updateDataModel</code>에 두 페이지에 표시할 공간과 상태를 담습니다.</li>
+                    <li><code>updateComponents</code>에서 <code>firstPage</code>, <code>secondPage</code>에 각 페이지의 <code>Row</code> ID를 연결합니다.</li>
+                  </ol>
+                  <pre class="figma-wire" tabindex="0" aria-label="전체 A2UI JSON"><code>[
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;createSurface&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-3&quot;,
+      &quot;catalogId&quot;: &quot;urn:gggen:device-catalog:v1&quot;
+    }
+  },
+
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateDataModel&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-3&quot;,
+      &quot;path&quot;: &quot;/&quot;,
+      &quot;value&quot;: {
+        &quot;title&quot;: &quot;에어 케어&quot;,
+        &quot;subtitle&quot;: &quot;공기질을 확인하려면 공기청정기를 켜세요.&quot;,
+        &quot;pages&quot;: [
+          [
+            {
+              &quot;name&quot;: &quot;야외&quot;,
+              &quot;status&quot;: &quot;보통&quot;,
+              &quot;symbol&quot;: &quot;≋&quot;
+            },
+            {
+              &quot;name&quot;: &quot;거실&quot;,
+              &quot;status&quot;: &quot;데이터 없음&quot;,
+              &quot;symbol&quot;: &quot;⌂&quot;
+            },
+            {
+              &quot;name&quot;: &quot;우리방&quot;,
+              &quot;status&quot;: &quot;데이터 없음&quot;,
+              &quot;symbol&quot;: &quot;⌂&quot;
+            }
+          ],
+          [
+            {
+              &quot;name&quot;: &quot;준우방&quot;,
+              &quot;status&quot;: &quot;데이터 없음&quot;,
+              &quot;symbol&quot;: &quot;⌂&quot;
+            },
+            {
+              &quot;name&quot;: &quot;침실&quot;,
+              &quot;status&quot;: &quot;데이터 없음&quot;,
+              &quot;symbol&quot;: &quot;⌂&quot;
+            }
+          ]
+        ]
+      }
+    }
+  },
+
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateComponents&quot;: {
+      &quot;surfaceId&quot;: &quot;figma-example-3&quot;,
+      &quot;components&quot;: [
+        {&quot;id&quot;: &quot;root&quot;, &quot;component&quot;: &quot;AirCarePager&quot;, &quot;title&quot;: {&quot;path&quot;: &quot;/title&quot;}, &quot;subtitle&quot;: {&quot;path&quot;: &quot;/subtitle&quot;}, &quot;firstPage&quot;: &quot;page-1&quot;, &quot;secondPage&quot;: &quot;page-2&quot;},
+        {&quot;id&quot;: &quot;page-1&quot;, &quot;component&quot;: &quot;Row&quot;, &quot;justify&quot;: &quot;stretch&quot;, &quot;children&quot;: [&quot;page-1-room-1&quot;, &quot;page-1-room-2&quot;, &quot;page-1-room-3&quot;]},
+        {&quot;id&quot;: &quot;page-1-room-1&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;align&quot;: &quot;center&quot;, &quot;weight&quot;: 1, &quot;children&quot;: [&quot;page-1-room-1-icon&quot;, &quot;page-1-room-1-name&quot;, &quot;page-1-room-1-status&quot;]},
+        {&quot;id&quot;: &quot;page-1-room-1-icon&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/0/symbol&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;page-1-room-1-name&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/0/name&quot;}},
+        {&quot;id&quot;: &quot;page-1-room-1-status&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/0/status&quot;}, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;page-1-room-2&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;align&quot;: &quot;center&quot;, &quot;weight&quot;: 1, &quot;children&quot;: [&quot;page-1-room-2-icon&quot;, &quot;page-1-room-2-name&quot;, &quot;page-1-room-2-status&quot;]},
+        {&quot;id&quot;: &quot;page-1-room-2-icon&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/1/symbol&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;page-1-room-2-name&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/1/name&quot;}},
+        {&quot;id&quot;: &quot;page-1-room-2-status&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/1/status&quot;}, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;page-1-room-3&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;align&quot;: &quot;center&quot;, &quot;weight&quot;: 1, &quot;children&quot;: [&quot;page-1-room-3-icon&quot;, &quot;page-1-room-3-name&quot;, &quot;page-1-room-3-status&quot;]},
+        {&quot;id&quot;: &quot;page-1-room-3-icon&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/2/symbol&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;page-1-room-3-name&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/2/name&quot;}},
+        {&quot;id&quot;: &quot;page-1-room-3-status&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/0/2/status&quot;}, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;page-2&quot;, &quot;component&quot;: &quot;Row&quot;, &quot;justify&quot;: &quot;stretch&quot;, &quot;children&quot;: [&quot;page-2-room-1&quot;, &quot;page-2-room-2&quot;]},
+        {&quot;id&quot;: &quot;page-2-room-1&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;align&quot;: &quot;center&quot;, &quot;weight&quot;: 1, &quot;children&quot;: [&quot;page-2-room-1-icon&quot;, &quot;page-2-room-1-name&quot;, &quot;page-2-room-1-status&quot;]},
+        {&quot;id&quot;: &quot;page-2-room-1-icon&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/1/0/symbol&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;page-2-room-1-name&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/1/0/name&quot;}},
+        {&quot;id&quot;: &quot;page-2-room-1-status&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/1/0/status&quot;}, &quot;variant&quot;: &quot;caption&quot;},
+        {&quot;id&quot;: &quot;page-2-room-2&quot;, &quot;component&quot;: &quot;Column&quot;, &quot;align&quot;: &quot;center&quot;, &quot;weight&quot;: 1, &quot;children&quot;: [&quot;page-2-room-2-icon&quot;, &quot;page-2-room-2-name&quot;, &quot;page-2-room-2-status&quot;]},
+        {&quot;id&quot;: &quot;page-2-room-2-icon&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/1/1/symbol&quot;}, &quot;variant&quot;: &quot;h3&quot;},
+        {&quot;id&quot;: &quot;page-2-room-2-name&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/1/1/name&quot;}},
+        {&quot;id&quot;: &quot;page-2-room-2-status&quot;, &quot;component&quot;: &quot;Text&quot;, &quot;text&quot;: {&quot;path&quot;: &quot;/pages/1/1/status&quot;}, &quot;variant&quot;: &quot;caption&quot;}
+      ]
+    }
+  }
+]</code></pre>
+                </details>
+              </td>
+            </tr>
+            <tr id="figma-feature-suggestion">
+              <th scope="row">
+                <h3>4번 · 기능 제안</h3>
+                <figure>
+                  <img data-offline-image src="../a2ui-test/figma-sample-4.svg" alt="기능 제안 카드. 왼쪽에는 사진, 오른쪽에는 이미지와 함께 표시되는 카드의 예제입니다 문구가 있습니다.">
+                  <figcaption>참고 이미지를 바탕으로 구성한 카드 미리보기</figcaption>
+                </figure>
+              </th>
+              <td>
+                <p><strong>커스텀 컴포넌트 <code>FeatureSuggestionCard</code></strong></p>
+                <p>서버가 제목, 이미지 URL, 안내 문구를 전달합니다. Android는 상단에 제목을 두고, 아래에 사진과 문구를 나란히 그립니다. 등록 여부를 서버에 알리는 앱에는 아래 커스텀 JSON을 보내고, 다른 앱에는 같은 배치를 기본 컴포넌트로 보냅니다.</p>
+                <p><a href="#custom-feature-suggestion">4번 커스텀 컴포넌트 구현 보기</a></p>
+                <details class="figma-json">
+                  <summary>A2UI 메시지 전체 보기 · 개발 참고</summary>
+                  <pre class="figma-wire" tabindex="0" aria-label="전체 A2UI JSON"><code>[
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;createSurface&quot;: {
+      &quot;surfaceId&quot;: &quot;feature-suggestion-example&quot;,
+      &quot;catalogId&quot;: &quot;urn:gggen:device-catalog:v1&quot;
+    }
+  },
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateDataModel&quot;: {
+      &quot;surfaceId&quot;: &quot;feature-suggestion-example&quot;,
+      &quot;path&quot;: &quot;/&quot;,
+      &quot;value&quot;: {
+        &quot;title&quot;: &quot;기능 제안&quot;,
+        &quot;imageUrl&quot;: &quot;https://picsum.photos/200/300&quot;,
+        &quot;description&quot;: &quot;이미지와 함께 표시되는 카드의 예제입니다&quot;
+      }
+    }
+  },
+  {
+    &quot;version&quot;: &quot;v0.9.1&quot;,
+    &quot;updateComponents&quot;: {
+      &quot;surfaceId&quot;: &quot;feature-suggestion-example&quot;,
+      &quot;components&quot;: [
+        {
+          &quot;id&quot;: &quot;root&quot;,
+          &quot;component&quot;: &quot;FeatureSuggestionCard&quot;,
+          &quot;title&quot;: {
+            &quot;path&quot;: &quot;/title&quot;
+          },
+          &quot;imageUrl&quot;: {
+            &quot;path&quot;: &quot;/imageUrl&quot;
+          },
+          &quot;description&quot;: {
+            &quot;path&quot;: &quot;/description&quot;
+          }
+        }
+      ]
+    }
+  }
+]</code></pre>
+                </details>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="custom-components">
+      <h2>커스텀 컴포넌트</h2>
+      <p><strong>기본 컴포넌트 조합을 재사용하는 방법</strong>으로는 서버 템플릿과 카탈로그 확장이 있습니다. 서버 템플릿은 ‘추천 카드’에 제목과 사진을 넣어 기존 <code>Card</code>, <code>Row</code>, <code>Image</code>, <code>Text</code>로 풀어 보냅니다. 카탈로그 확장은 <code>FeatureSuggestionCard</code>처럼 클라이언트가 받는 새 타입과 속성을 정의하고, 그 타입을 그리는 앱 구현을 연결합니다. 두 방법 모두 카드 안에 기본 요소를 조합해 같은 배치를 만들 수 있습니다.</p>
+      <h3>3번 · 에어 케어</h3>
+      <p><a href="#figma-air-care">3번 Figma 예제</a>에서 화면 구성은 기본 컴포넌트로, 스와이프 동작은 <code>AirCarePager</code>로 구현했습니다. 한 번에 카드 한 페이지를 보여주고, 스와이프하면 다음 페이지와 활성 표시점이 함께 바뀝니다.</p>
+
+      <h3>기본 컴포넌트와 커스텀의 경계</h3>
+      <pre><code>AirCarePager · 커스텀
+├─ 첫 페이지 · Row
+│  ├─ 야외 · Column
+│  ├─ 거실 · Column
+│  └─ 우리방 · Column
+└─ 두 번째 페이지 · Row
+   ├─ 준우방 · Column
+   └─ 침실 · Column</code></pre>
+      <p>각 공간의 <code>Column</code> 안에는 기호, 이름, 상태를 그리는 <code>Text</code>가 들어갑니다. 여기에 필요한 건 가로·세로 배치와 데이터 바인딩입니다. <code>AirCarePager</code>는 두 <code>Row</code>를 받아 한 페이지씩 표시하고, 제스처와 하단 점을 처리합니다. 앱 구현에는 Compose의 <code>HorizontalPager</code>를 사용했습니다.</p>
+
+      <h3>서버와 앱이 맞춘 속성</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">속성</th><th scope="col">서버가 전달하는 값</th><th scope="col">앱에서의 처리</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>title</code>, <code>subtitle</code></th><td>필수 · 제목과 안내 문구. 이 예제에서는 데이터 모델에 연결합니다.</td><td>페이지 위에 공통 제목과 안내를 그립니다.</td></tr>
+          <tr><th scope="row"><code>firstPage</code></th><td>필수 · 첫 번째 <code>Row</code>의 ID</td><td>첫 페이지에서 야외·거실·우리방을 표시합니다.</td></tr>
+          <tr><th scope="row"><code>secondPage</code></th><td>필수 · 두 번째 <code>Row</code>의 ID</td><td>두 번째 페이지에서 준우방·침실을 표시합니다.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>디자인의 동작을 앱에 연결하는 과정</h3>
+      <ol>
+        <li><strong>동작을 정의합니다.</strong> 한 화면에 한 페이지를 표시하고, 좌우 스와이프나 하단 점 선택으로 두 페이지를 오가게 합니다.</li>
+        <li><strong>앱에 구현하고 등록합니다.</strong> <code>AirCarePager</code>가 두 자식 ID를 해석해 페이지를 그리고, 현재 페이지와 표시점을 함께 갱신하도록 구현합니다. 기본 컴포넌트와 함께 앱 카탈로그에 등록합니다.</li>
+        <li><strong>서버가 페이지 내용과 값을 보냅니다.</strong> <code>createSurface</code>로 커스텀 타입이 들어 있는 카탈로그를 지정하고, 두 페이지의 구조와 공간별 값을 전달합니다. 페이지 전환은 받은 데이터로 앱에서 처리합니다.</li>
+      </ol>
+      <p>이미 등록된 속성 범위에서는 공간 이름이나 상태, 각 페이지 안의 구성은 서버에서 바꿀 수 있습니다. 앱 구현이 받는 페이지가 두 개로 정해져 있으므로, 세 번째 페이지까지 지원하려면 페이지를 받는 계약과 앱 구현을 함께 변경해야 합니다.</p>
+
+      <h3 id="custom-feature-suggestion">4번 · 기능 제안</h3>
+      <p><a href="#figma-feature-suggestion">4번 미리보기</a>의 제목·사진·문구 배치를 <code>FeatureSuggestionCard</code> 하나에 묶었습니다. 여러 추천에서 같은 모양을 쓰고 값만 바꿀 수 있도록, 카드 내부 배치는 앱에서 관리합니다.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">필수 속성</th><th scope="col">예시 값</th><th scope="col">카드에 표시되는 위치</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>title</code></th><td>기능 제안</td><td>카드 상단 제목</td></tr>
+          <tr><th scope="row"><code>imageUrl</code></th><td><code>https://picsum.photos/200/300</code></td><td>본문 왼쪽 사진</td></tr>
+          <tr><th scope="row"><code>description</code></th><td>이미지와 함께 표시되는 카드의 예제입니다</td><td>본문 오른쪽 문구</td></tr>
+        </tbody>
+      </table></div>
+      <p>서버는 Surface의 커스텀 카탈로그를 지정하고 세 값을 데이터 모델에 담습니다. 앱에 등록된 <code>FeatureSuggestionCard</code>는 그 값을 읽어 내부에서 Compose <code>Card</code> 계열과 <code>Column</code>, <code>Row</code>, 이미지, 텍스트를 조합합니다.</p>
+      <p>3번은 <strong>페이지 전환 동작</strong>을 구현하기 위해 커스텀 타입을 썼습니다. 4번은 기본 카탈로그로도 표현할 수 있는 배치를 <strong>공통 카드로 재사용</strong>하기 위해 커스텀 타입으로 등록한 예입니다. 사진 변경 범위는 앱의 이미지 로더가 지원하는 주소에 따릅니다.</p>
+    </section>
+
+    <section id="design">
+      <h2>기획과 Figma에서 확인할 것</h2>
+      <p>디자이너는 Figma에서 팀의 <strong>기기 카드·배지·리포트</strong>처럼 설계하기 편한 단위로 작업합니다. 개발팀은 그 요소를 앱에서 지원하는 A2UI 컴포넌트와 속성에 대응시킵니다. Figma 카드 하나가 여러 A2UI 요소로 변환될 수 있습니다.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">디자인 요구</th><th scope="col">표현 방법</th><th scope="col">구현 시 확인</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">기기 이름과 종류를 세로로 배치</th><td><code>Card → Column → Text + Text</code></td><td>긴 이름의 줄바꿈과 빈 값 표시</td></tr>
+          <tr><th scope="row">모바일 기기만 파란 배경</th><td><code>ColoredCard</code></td><td>서버가 원본 type이 MOBILE인지 판단하고, 앱이 전달된 색을 적용</td></tr>
+          <tr><th scope="row">주간 리포트의 제목·본문·구분선</th><td><code>Card</code>, <code>Column</code>, <code>Text</code>, <code>Divider</code></td><td><code>Divider</code> 등 필요한 요소를 생성 범위에 포함</td></tr>
+          <tr><th scope="row">요일별 상태 점과 작은 배지</th><td>기본 배치를 활용하고 상태의 색·형태는 전용 속성이나 컴포넌트로 표현</td><td>원본과 일치해야 하는 스타일, 상태별 데이터, 접근성</td></tr>
+          <tr><th scope="row">두 카드 사이를 스와이프</th><td><code>AirCarePager</code> 안에 두 페이지의 콘텐츠를 연결</td><td>좌우 스와이프, 표시점 선택, 페이지 상태</td></tr>
+        </tbody>
+      </table></div>
+      <p>변환 전에는 <strong>카탈로그의 속성 → 서버 변환 범위 → 앱의 렌더링과 동작</strong>을 확인합니다. 에이전트는 Figma 구조를 읽어 지원되는 요소로 매핑하고 빠지는 부분을 표시할 수 있습니다. JSON 검증 뒤에는 작은 화면, 긴 텍스트, 빈 데이터로 실제 앱 화면을 비교합니다.</p>
+    </section>
+
+    <section id="app-release">
+      <h2>앱 재배포가 필요한 경우</h2>
+      <p><strong>이미 배포된 앱이 지원하는 배치와 데이터는 서버 JSON으로 바꿀 수 있습니다.</strong> 화면을 그리거나 동작시키는 기능을 앱에 처음 추가하는 경우에는 그 구현을 포함한 앱을 배포해야 합니다.</p>
+  
+      <h3>어떤 변경을 서버에서 처리할 수 있나</h3>
+      <p>판단할 때는 “이 디자인이 새로운가?”보다 <strong>“사용자가 설치한 앱이 필요한 요소를 그리고, 요청한 동작까지 수행할 수 있는가?”</strong>를 먼저 봅니다. 처음 선보이는 화면도 기존 요소와 동작을 조합해 표현할 수 있으면 서버에서 배포할 수 있습니다.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="일반적인 화면 변경과 앱 업데이트 판단 기준">
+        <table>
+          <thead><tr><th scope="col">바꾸고 싶은 것</th><th scope="col">서버에서 처리할 수 있는 예</th><th scope="col">앱 업데이트가 필요한 예</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">내용과 노출 조건</th><td>공지 문구나 상품 가격을 바꿉니다. 주문 상태가 ‘배송 중’이면 배송 안내를 추가합니다. 서버가 값을 알고 있고 앱이 기존 텍스트로 표시할 수 있습니다.</td><td>사용자의 현재 위치에 맞는 공지를 보여주려는데 앱에 위치 권한 요청과 위치 전달 기능을 처음 넣어야 합니다.</td></tr>
+            <tr><th scope="row">배치와 순서</th><td>예약 화면에서 취소 안내를 결제 정보 위로 옮기거나, 카드의 사진과 설명을 가로에서 세로로 재배치합니다. 서버가 각 요소의 순서와 배치를 지정할 수 있는 경우입니다.</td><td>앱 내부에 배치가 고정된 전용 카드에서 사진을 본문 위에 겹쳐야 합니다. 기존 속성이나 다른 등록 요소의 조합으로도 겹침을 표현할 수 없으면 앱에 그 배치를 추가합니다.</td></tr>
+            <tr><th scope="row">목록과 페이지 수</th><td>추천 상품을 3개에서 5개로 늘립니다. 항목 목록을 받는 컴포넌트라면 서버가 항목 두 개를 더 보냅니다.</td><td>두 페이지만 받도록 구현된 스와이프 카드에 세 번째 페이지를 추가합니다. 같은 카드 안에서 세 페이지를 넘기려면 앱이 가변 개수의 페이지를 처리할 수 있어야 합니다.</td></tr>
+            <tr><th scope="row">이미지와 스타일</th><td>배너 사진을 앱이 이미 읽을 수 있는 주소의 새 사진으로 교체합니다. 카드가 ‘강조’ 스타일을 지원한다면 특정 배너에만 적용할 수 있습니다.</td><td>사진 영역이 앱 코드에서 세로형으로 고정돼 있는데 정사각형 썸네일이 필요합니다. 기존 배치나 속성으로 영역의 비율을 지정할 수 없다면 이미지 표시 구현을 확장합니다.</td></tr>
+            <tr><th scope="row">버튼과 사용자 동작</th><td>주문 카드에 ‘배송 조회’ 버튼을 추가합니다. 앱이 배송 상세 화면 열기를 이미 지원하면 서버가 버튼에 그 동작과 주문 번호를 연결합니다.</td><td>‘영수증 촬영’ 버튼을 눌러 카메라를 열고 사진을 첨부해야 하는데 앱에 그 동작이 없습니다. 버튼은 그릴 수 있어도 촬영·첨부 기능은 앱에 구현해 배포해야 합니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>여러 앱 버전을 함께 운영하면 같은 디자인도 버전별로 판단합니다. 예를 들어 새 버전에는 스와이프 카드를, 이전 버전에는 같은 내용을 기존 목록으로 보낼 수 있습니다. 이때 서버는 요청한 앱이 어느 구성을 지원하는지 구분할 수 있어야 합니다.</p>
+
+      <h3>Surface와 카탈로그를 한 번 연결한다는 뜻</h3>
+      <p>앱은 먼저 메시지 프로세서에 렌더링 카탈로그를 연결합니다. 이후 서버가 지원 범위 안의 JSON을 보내면 앱은 같은 호출로 새 구성을 그립니다. 새 화면마다 Compose 화면 코드를 만드는 작업이 줄어드는 지점입니다.</p>
+      <pre><code>// 초기 연결에서 앱이 지원할 카탈로그를 선택
+val processor = A2uiMessageProcessor(catalogs = listOf(basicCatalog))
+
+// 수신한 JSON 메시지를 처리하고 활성 Surface 모델을 표시
+processor.processInput(parser, rawMessage)
+A2uiSurface(surfaceModel = surface)</code></pre>
+      <p><strong>이미지의 경우</strong> JSON의 <code>Image.url</code>은 사진의 주소입니다. 이 예제의 AndroidX Material 연결에서는 기본 <code>Image</code>가 전달한 주소와 표시 속성을 앱이 연결한 이미지 로더가 받습니다. 앱 쪽 콜백이 사진을 내려받아 그려야 실제 이미지가 보입니다. 초기 앱은 이 콜백이 비어 있었고, 이후 한 번 연결했습니다. 지금 앱에는 외부 요청이 느리거나 실패할 때 쓸 예시 사진도 포함되어 있습니다.</p>
+      <p><strong>카탈로그를 서버에서 받는 경우</strong> 카탈로그 정의를 전달하면 이름과 속성 규칙을 공유할 수 있습니다. 앱에 그 타입을 실행하는 구현이나 실행 가능한 템플릿 기능이 갖춰져 있어야 화면에 그릴 수 있습니다. 4번처럼 기본 요소의 조합이면, 서버에서 템플릿을 관리하고 기존 <code>Card</code>, <code>Row</code>, <code>Image</code>, <code>Text</code>로 풀어 보내는 방식도 가능합니다.</p>
+
+      <h3>Figma를 수정하면 언제 앱에 반영되나</h3>
+      <ol>
+        <li><strong>Figma 변경을 읽습니다.</strong> 꼭 유지해야 하는 배치, 속성, 동작을 기록합니다.</li>
+        <li><strong>현재 앱의 카탈로그에 맞춰 변환합니다.</strong> 필요한 컴포넌트가 등록돼 있는지, 원하는 속성과 동작을 실제로 처리하는지 확인합니다.</li>
+        <li><strong>JSON과 렌더링을 검증합니다.</strong> 필수 속성과 자식 ID를 확인하고, 실제 화면에서 글자 길이·이미지 크기·동작을 살펴봅니다.</li>
+        <li><strong>서버에 반영합니다.</strong> 현재 데모는 정리한 디자인 스냅샷을 사용합니다. 최신 스냅샷을 저장하고 선택하면 앱의 다음 새로고침에 적용됩니다.</li>
+      </ol>
+      <p>Figma 원본의 변경을 저장 시점에 앱까지 자동으로 전달하려면, 변경 감지와 변환·검증·반영 과정이 추가로 연결되어야 합니다.</p>
+
+      <h3>4번에서 APK를 여러 번 빌드한 이유</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="기능 제안 카드 앱 빌드 내역">
+        <table>
+          <thead><tr><th scope="col">버전</th><th scope="col">추가한 기능</th><th scope="col">배포가 필요한 범위</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">0.5</th><td>기본 <code>Image</code>에 URL 이미지 로더 연결</td><td>기존 앱에서 사진을 처음 표시하려면 앱 업데이트가 필요했습니다.</td></tr>
+            <tr><th scope="row">0.6</th><td>4번을 <code>FeatureSuggestionCard</code>로 등록</td><td>커스텀 타입을 쓰는 실험에 필요한 빌드였습니다. 기본 컴포넌트 조합으로도 같은 카드 배치를 표현할 수 있습니다.</td></tr>
+            <tr><th scope="row">0.7</th><td>앱이 서버에 새 타입 지원 여부를 알리도록 연결</td><td>서버는 지원 신호가 없는 앱에는 기본 조합을 보냅니다. 이 응답 변경은 기존 앱에서 새 타입을 찾지 못하던 오류를 서버 쪽에서 해결합니다.</td></tr>
+            <tr><th scope="row">0.8</th><td>외부 사진을 기다리거나 가져오지 못할 때 쓸 예시 사진을 앱에 포함</td><td>앱에 내장 사진을 추가한 빌드입니다. 이미 URL 사진을 표시할 수 있는 앱은 문구나 배치를 바꾸기 위해 이 빌드가 필요하지 않습니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>프로젝트 시작 전에 확인할 범위</h3>
+      <ul>
+        <li><strong>자주 바뀌는 항목을 정합니다.</strong> 문구, 카드 순서, 가로·세로 배치, 이미지 비율처럼 반복해서 바꿀 항목을 Figma 요구사항에서 표시합니다.</li>
+        <li><strong>설치된 앱에서 되는지 확인합니다.</strong> 공식 카탈로그에 이름이 있어도 앱의 이미지 로더나 이벤트 처리기가 실제로 연결돼 있어야 합니다.</li>
+        <li><strong>앱 버전별로 보낼 화면을 정합니다.</strong> 새 타입이 등록된 앱에는 새 구성을 보내고, 기존 앱에는 같은 정보를 기본 조합으로 보냅니다. 4번이 이 방식의 예입니다.</li>
+        <li><strong>직접 만든 JSON 방식과 비교합니다.</strong> 둘 다 JSON에서 Compose 요소를 조립합니다. A2UI를 쓰면 공통 카탈로그, 메시지 구조, Surface 갱신 방식과 기존 렌더러를 재사용할 수 있습니다.</li>
+      </ul>
+
+    </section>
+
+    <section id="architecture">
+      <h2>시스템 흐름</h2>
+      <p>서버에 저장된 디자인 스냅샷이나 프롬프트 레이아웃을 앱 새로고침에 사용합니다. 프롬프트 모드에서 캐시가 비어 있으면 모델에 화면 요구와 허용 스키마를 보내고, 실제 서비스 데이터는 서버에서 바인딩합니다. 에어 케어와 기능 제안 화면은 스냅샷의 예시 데이터를 사용합니다. 이 구현은 새로고침마다 HTTP 응답 하나에 메시지 세 개를 담아 보냅니다.</p>
+      <article class="diagram">
+        <h3>데이터 흐름도</h3>
+        <div class="diagram-render"></div>
+        <details><summary>Mermaid 원문</summary><pre><code class="mermaid-source">flowchart TB
+    F["Figma 디자인"] --&gt; A["에이전트가 구조와 속성 정리"]
+    A --&gt; D["디자인 스냅샷"]
+    P["UX 프롬프트"] --&gt; L["검증된 레이아웃 · 캐시 또는 모델 생성"]
+    D --&gt; R["선택된 화면 구성"]
+    L --&gt; R
+    S["서비스 데이터"] --&gt; B["서버에서 데이터 바인딩"]
+    R --&gt; B
+    B --&gt; J["A2UI 메시지"]
+    J --&gt; U["Android A2uiSurface"]</code></pre></details>
+      </article>
+      <article class="diagram">
+        <h3>시스템 아키텍처</h3>
+        <div class="diagram-render"></div>
+        <details><summary>Mermaid 원문</summary><pre><code class="mermaid-source">flowchart TB
+    W["대시보드 · 디자인 선택과 프롬프트 설정"]
+    A["Android 앱 · 새로고침과 화면 표시"]
+    W --&gt; H["HTTPS 진입점"]
+    A --&gt; H
+    subgraph M["현재 서버 구성"]
+      H --&gt; S["웹 서버 · 문서 제공과 API 프록시"]
+      S --&gt; B["API 브리지 · 화면 생성"]
+      B --&gt; D["설정 · 디자인 스냅샷 · 레이아웃 캐시"]
+    end
+    B --&gt; T["서비스 API · 데이터 조회"]
+    B --&gt; G["Gemini · 프롬프트 모드에서 필요 시 호출"]</code></pre></details>
+      </article>
+      <article class="diagram">
+        <h3>컴포넌트 다이어그램</h3>
+        <div class="diagram-render"></div>
+        <details><summary>Mermaid 원문</summary><pre><code class="mermaid-source">flowchart TB
+    subgraph S["서버"]
+      R["디자인 선택과 화면 요청"] --&gt; L["화면 구성 결정"]
+      L --&gt; A["데이터 모델과 컴포넌트 배열 조립"]
+    end
+    A --&gt; J["A2UI v0.9.1 메시지"]
+    subgraph N["Android"]
+      J --&gt; P["메시지 파서와 프로세서"]
+      P --&gt; M["활성 Surface 모델"]
+      M --&gt; U["렌더러 · A2uiSurface"]
+      C["기본 및 커스텀 카탈로그"] --&gt; P
+      U --&gt; B["기본 또는 커스텀 Compose UI"]
+    end</code></pre></details>
+      </article>
+      <article class="diagram">
+        <h3>시퀀스 다이어그램</h3>
+        <div class="diagram-render"></div>
+        <details><summary>Mermaid 원문</summary><pre><code class="mermaid-source">sequenceDiagram
+    actor U as 사용자
+    participant D as 대시보드
+    participant A as Android 앱
+    participant S as 화면 API
+    participant T as 서비스 API
+    U-&gt;&gt;D: 디자인 선택 후 적용
+    D-&gt;&gt;S: 선택과 현재 설정 버전 전송
+    S--&gt;&gt;D: 적용 결과
+    U-&gt;&gt;A: 새로고침
+    A-&gt;&gt;S: 화면 요청
+    alt 실제 데이터 화면
+      S-&gt;&gt;T: 화면에 필요한 데이터 요청
+      T--&gt;&gt;S: 데이터 반환
+    else 예시 화면
+      S-&gt;&gt;S: 스냅샷에 저장된 예시 데이터 사용
+    end
+    S-&gt;&gt;S: 선택된 레이아웃과 데이터를 조립
+    S--&gt;&gt;A: createSurface, updateDataModel, updateComponents
+    A--&gt;&gt;U: Compose 화면 표시</code></pre></details>
+      </article>
+    </section>
+
+    <section id="sources">
+      <h2>공식 자료</h2>
+      <ul>
+        <li><a href="https://a2ui.org/concepts/catalogs/">A2UI 카탈로그 개념과 커스텀 정의</a></li>
+        <li><a href="https://a2ui.org/specification/v0.9.1-basic-catalog-implementation-guide/">v0.9.1 기본 카탈로그 가이드</a></li>
+        <li><a href="https://a2ui.org/specification/v0.9.1-a2ui/">v0.9.1 프로토콜 사양</a></li>
+        <li><a href="https://developer.android.com/develop/ui/compose/agentic/render-surfaces">AndroidX Compose Surface 연결 가이드</a></li>
+        <li><a href="https://a2ui.org/reference/renderers/">플랫폼별 렌더러</a> · <a href="https://github.com/a2ui-project/a2ui/blob/main/swift/sample/README.md">SwiftUI 샘플</a></li>
+      </ul>
+    </section>
+  </main>
+</div>
+</body>
+</html>
